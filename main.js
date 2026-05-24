@@ -189,109 +189,496 @@ async function createDefaultProfile() {
 }
 
 /* ── Grid & Generator Logic ───────────────────────────────── */
+let cachedHistory = [];
+let selectedHistoryItem = null;
+let currentType = '';
+
+function parseGeneratedContent(htmlContent) {
+    const div = document.createElement('div');
+    div.innerHTML = htmlContent || '';
+    
+    // Find the image source
+    const imgEl = div.querySelector('img');
+    const imageUrl = imgEl ? imgEl.src : '';
+    
+    // Remove the center wrapper of the image to get clean caption HTML/Text
+    const centerDivs = div.querySelectorAll('div[style*="text-align: center"], div[style*="text-align:center"]');
+    centerDivs.forEach(el => el.remove());
+    
+    const captionHtml = div.innerHTML.trim();
+    const captionText = div.innerText.trim();
+    
+    return { imageUrl, captionHtml, captionText };
+}
+
+function renderCard(contentItem) {
+    const { imageUrl } = parseGeneratedContent(contentItem.generated_content);
+    
+    // Determine aspect ratio class
+    let aspectClass = 'aspect-1-1';
+    if (contentItem.generated_content.includes('aspect-ratio: 9 / 16') || contentItem.user_input.toLowerCase().includes('dikey') || contentItem.user_input.toLowerCase().includes('9:16')) {
+        aspectClass = 'aspect-9-16';
+    } else if (contentItem.generated_content.includes('aspect-ratio: 16 / 9') || contentItem.user_input.toLowerCase().includes('yatay') || contentItem.user_input.toLowerCase().includes('16:9')) {
+        aspectClass = 'aspect-16-9';
+    }
+    
+    const featuredClass = contentItem.id % 6 === 0 ? 'card-featured' : '';
+    const isFav = contentItem.is_favorite ? 'is-fav' : '';
+    const favIcon = contentItem.is_favorite ? '★' : '☆';
+    
+    return `
+        <div class="image-card ${aspectClass} ${featuredClass}" data-id="${contentItem.id}">
+            <div class="image-card-img-wrapper">
+                <img src="${imageUrl || 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=400&auto=format&fit=crop'}" alt="Preview" loading="lazy">
+            </div>
+            <div class="image-card-footer">
+                <p class="image-card-prompt">${contentItem.user_input}</p>
+                <div class="image-card-meta-row">
+                    <div class="image-card-tags">
+                        <span class="image-card-tag">${contentItem.content_type.toUpperCase()}</span>
+                    </div>
+                    <div class="image-card-actions">
+                        <button class="image-card-action-btn btn-card-fav ${isFav}" data-id="${contentItem.id}">${favIcon}</button>
+                        <button class="image-card-action-btn btn-card-del" data-id="${contentItem.id}">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function openDetailDrawer(item) {
+    const drawer = document.getElementById('modalDetailDrawer');
+    const { imageUrl, captionText } = parseGeneratedContent(item.generated_content);
+    
+    selectedHistoryItem = item;
+    
+    document.getElementById('drawerImg').src = imageUrl || 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=400&auto=format&fit=crop';
+    
+    // Format aspect ratio text
+    let ratioText = 'Kare (1:1)';
+    if (item.generated_content.includes('aspect-ratio: 9 / 16')) ratioText = 'Dikey (9:16)';
+    if (item.generated_content.includes('aspect-ratio: 16 / 9')) ratioText = 'Yatay (16:9)';
+    document.getElementById('drawerMetaFormat').innerText = ratioText;
+    
+    document.getElementById('drawerMetaModel').innerText = item.model_used || 'Z-Image-Turbo';
+    
+    const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : 'Bilinmiyor';
+    document.getElementById('drawerMetaDate').innerText = dateStr;
+    
+    document.getElementById('drawerCaption').innerText = captionText;
+    
+    // Favorite Button Status
+    const favBtn = document.getElementById('btnFavToggle');
+    if (item.is_favorite) {
+        favBtn.classList.add('active');
+        favBtn.innerHTML = '<span>★</span> Favorilerde';
+    } else {
+        favBtn.classList.remove('active');
+        favBtn.innerHTML = '<span>☆</span> Favorile';
+    }
+    
+    document.getElementById('btnDownloadImg').href = imageUrl;
+    
+    drawer.classList.add('active');
+}
+
+function closeDetailDrawer() {
+    const drawer = document.getElementById('modalDetailDrawer');
+    if (drawer) {
+        drawer.classList.remove('active');
+    }
+    selectedHistoryItem = null;
+}
+
+async function loadHistory() {
+    if (!currentToken) return;
+
+    try {
+        const res = await fetch(`${API_URL}/content/history?limit=30`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`
+            }
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.contents) {
+            cachedHistory = data.contents;
+            renderGrids();
+        }
+    } catch (err) {
+        console.error("Geçmiş yükleme hatası:", err);
+    }
+}
+
+function renderGrids() {
+    const imageGrid = document.getElementById('modalImageGrid');
+    const fullGalleryGrid = document.getElementById('fullGalleryGrid');
+    
+    if (!imageGrid || !fullGalleryGrid) return;
+    
+    if (cachedHistory.length === 0) {
+        imageGrid.innerHTML = `
+            <div class="grid-placeholder" id="gridPlaceholder">
+                <div class="placeholder-icon">✨</div>
+                <h3>Henüz görsel üretilmedi</h3>
+                <p>Aşağıdaki prompt alanından markanız için ilk paylaşımınızı oluşturun.</p>
+            </div>
+        `;
+        fullGalleryGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <span style="font-size: 2rem; display: block; margin-bottom: 12px;">📁</span>
+                <p>Galeri boş. Henüz hiç görsel üretmediniz.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Render Create Tab Grid
+    let createGridHtml = '';
+    cachedHistory.forEach(item => {
+        createGridHtml += renderCard(item);
+    });
+    imageGrid.innerHTML = createGridHtml;
+    
+    // Render Gallery Tab Grid
+    let galleryGridHtml = '';
+    const activeFilter = document.querySelector('.gallery-filter-btn.active')?.dataset.filter || 'all';
+    cachedHistory.forEach(item => {
+        if (activeFilter === 'all' || item.content_type === activeFilter) {
+            galleryGridHtml += renderCard(item);
+        }
+    });
+    fullGalleryGrid.innerHTML = galleryGridHtml || `
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
+            <p>Seçilen filtreye uygun içerik bulunamadı.</p>
+        </div>
+    `;
+    
+    attachCardListeners();
+}
+
+function attachCardListeners() {
+    const cards = document.querySelectorAll('.image-card');
+    cards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.image-card-action-btn')) return;
+            const itemId = parseInt(card.dataset.id);
+            const item = cachedHistory.find(x => x.id === itemId);
+            if (item) {
+                openDetailDrawer(item);
+            }
+        });
+    });
+    
+    const favBtns = document.querySelectorAll('.btn-card-fav');
+    favBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const itemId = parseInt(btn.dataset.id);
+            await toggleFavorite(itemId, btn);
+        });
+    });
+
+    const delBtns = document.querySelectorAll('.btn-card-del');
+    delBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const itemId = parseInt(btn.dataset.id);
+            if (confirm("Bu tasarımı kalıcı olarak silmek istediğinize emin misiniz?")) {
+                await deleteItem(itemId);
+            }
+        });
+    });
+}
+
+async function toggleFavorite(itemId, btnElement) {
+    try {
+        const res = await fetch(`${API_URL}/content/${itemId}/favorite`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`
+            }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            const item = cachedHistory.find(x => x.id === itemId);
+            if (item) item.is_favorite = data.is_favorite;
+            
+            if (btnElement) {
+                if (data.is_favorite) {
+                    btnElement.classList.add('is-fav');
+                    btnElement.innerText = '★';
+                } else {
+                    btnElement.classList.remove('is-fav');
+                    btnElement.innerText = '☆';
+                }
+            }
+            
+            if (selectedHistoryItem && selectedHistoryItem.id === itemId) {
+                selectedHistoryItem.is_favorite = data.is_favorite;
+                const drawerFavBtn = document.getElementById('btnFavToggle');
+                if (data.is_favorite) {
+                    drawerFavBtn.classList.add('active');
+                    drawerFavBtn.innerHTML = '<span>★</span> Favorilerde';
+                } else {
+                    drawerFavBtn.classList.remove('active');
+                    drawerFavBtn.innerHTML = '<span>☆</span> Favorile';
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Favori toggling hatası:", err);
+    }
+}
+
+async function deleteItem(itemId) {
+    try {
+        const res = await fetch(`${API_URL}/content/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`
+            }
+        });
+        if (res.ok) {
+            cachedHistory = cachedHistory.filter(x => x.id !== itemId);
+            renderGrids();
+            if (selectedHistoryItem && selectedHistoryItem.id === itemId) {
+                closeDetailDrawer();
+            }
+        }
+    } catch (err) {
+        console.error("İçerik silme hatası:", err);
+    }
+}
+
 function initGridModal() {
     const cells = document.querySelectorAll('.grid-cell');
     const modal = document.getElementById('modalOverlay');
     const closeBtn = document.getElementById('modalClose');
-    const modalTitle = document.getElementById('modalTitle');
     const generateBtn = document.getElementById('btnGenerate');
-    const outputBox = document.getElementById('outputBox');
+    const tabs = document.querySelectorAll('.modal-nav-tab');
+    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
     
-    let currentType = '';
+    // Tab panes
+    const panes = {
+        create: document.getElementById('tabPaneCreate'),
+        gallery: document.getElementById('tabPaneGallery'),
+        edit: document.getElementById('tabPaneEdit')
+    };
 
     // Open modal on cell click
     cells.forEach(cell => {
         cell.addEventListener('click', () => {
             currentType = cell.dataset.type;
-            const titleText = cell.querySelector('.cell-badge').innerText;
-            modalTitle.innerText = titleText + " OLUSTUR";
             
-            // Reset form
+            // Activate the Create tab on open
+            tabs.forEach(t => t.classList.remove('active'));
+            const createTab = document.querySelector('.modal-nav-tab[data-tab="create"]');
+            if (createTab) createTab.classList.add('active');
+            
+            Object.keys(panes).forEach(key => {
+                if (key === 'create') {
+                    panes[key].style.display = 'flex';
+                } else {
+                    panes[key].style.display = 'none';
+                }
+            });
+
+            // Reset inputs & close drawer
             document.getElementById('formPrompt').value = '';
-            document.getElementById('previewPlaceholder').style.display = 'flex';
-            document.getElementById('previewOutput').style.display = 'none';
-            outputBox.innerHTML = '';
+            closeDetailDrawer();
             
             modal.classList.add('active');
+            
+            // Load history dynamically
+            loadHistory();
         });
     });
 
     // Close modal
-    closeBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            closeDetailDrawer();
+        });
+    }
 
     // Close on overlay click
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.classList.remove('active');
+            closeDetailDrawer();
         }
     });
 
-    // Generate Button to Backend
-    generateBtn.addEventListener('click', async () => {
-        const sector = document.getElementById('formSector').value || 'Genel';
-        const prompt = document.getElementById('formPrompt').value;
-        const ratio = document.getElementById('formRatio').value;
-        
-        if (!prompt) {
-            alert("Lütfen ne paylaşmak istediğinizi kısaca yazın.");
-            return;
-        }
+    // Tab switching listener
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
 
-        generateBtn.innerText = "YAPAY ZEKA ÜRETİYOR...";
-        generateBtn.style.opacity = "0.5";
-        generateBtn.disabled = true;
-        
-        // Hide placeholder and show preview panel
-        document.getElementById('previewPlaceholder').style.display = 'none';
-        document.getElementById('previewOutput').style.display = 'block';
-        outputBox.innerHTML = `
-            <div style="text-align: center; padding: 60px 0;">
-                <span style="font-size: 2.5rem; display: block; margin-bottom: 16px;">⌛</span>
-                <b style="font-size: 1.1rem; display: block; margin-bottom: 8px;">Yapay Zeka Hazırlıyor...</b>
-                <span style="font-size: 0.9rem; color: #555;">Görsel çiziliyor ve metin kurgulanıyor.</span>
-            </div>
-        `;
-
-        try {
-            const res = await fetch(`${API_URL}/content/generate`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentToken}`
-                },
-                body: JSON.stringify({
-                    contentType: currentType,
-                    userInput: prompt,
-                    aspectRatio: ratio,
-                    // Pass sector temporarily until profile management UI is built
-                    temporaryOverrides: {
-                        industry: sector
-                    }
-                })
+            const targetTab = tab.dataset.tab;
+            Object.keys(panes).forEach(key => {
+                if (key === targetTab) {
+                    panes[key].style.display = 'flex';
+                } else {
+                    panes[key].style.display = 'none';
+                }
             });
+            
+            closeDetailDrawer();
+            
+            if (targetTab === 'gallery') {
+                loadHistory();
+            }
+        });
+    });
 
-            const data = await res.json();
+    // Gallery Filter switching
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGrids();
+        });
+    });
 
-            if (!res.ok) {
-                throw new Error(data.error || data.message || 'Üretim hatası');
+    // Detail Drawer Controls
+    const drawerClose = document.getElementById('drawerClose');
+    if (drawerClose) {
+        drawerClose.addEventListener('click', closeDetailDrawer);
+    }
+
+    const btnCopyCaption = document.getElementById('btnCopyCaption');
+    if (btnCopyCaption) {
+        btnCopyCaption.addEventListener('click', () => {
+            const captionText = document.getElementById('drawerCaption').innerText;
+            navigator.clipboard.writeText(captionText).then(() => {
+                btnCopyCaption.innerHTML = '<span>✅</span> Kopyalandı!';
+                setTimeout(() => {
+                    btnCopyCaption.innerHTML = '<span>📋</span> Metni Kopyala';
+                }, 2000);
+            }).catch(err => {
+                alert('Metin kopyalanamadı: ' + err);
+            });
+        });
+    }
+
+    const btnFavToggle = document.getElementById('btnFavToggle');
+    if (btnFavToggle) {
+        btnFavToggle.addEventListener('click', async () => {
+            if (selectedHistoryItem) {
+                await toggleFavorite(selectedHistoryItem.id, null);
+                // Re-fetch list to sync changes
+                await loadHistory();
+            }
+        });
+    }
+
+    const btnBackToCreate = document.getElementById('btnBackToCreate');
+    if (btnBackToCreate) {
+        btnBackToCreate.addEventListener('click', () => {
+            const createTab = document.querySelector('.modal-nav-tab[data-tab="create"]');
+            if (createTab) createTab.click();
+        });
+    }
+
+    // Generate Button click handler
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async () => {
+            const sector = document.getElementById('formSector').value || 'Genel';
+            const prompt = document.getElementById('formPrompt').value;
+            const ratio = document.getElementById('formRatio').value;
+            const model = document.getElementById('formModel').value;
+            const resolution = document.getElementById('formResolution').value;
+            const hdQuality = document.getElementById('toggleHD').checked;
+            const enhancedPrompt = document.getElementById('toggleEnhanced').checked;
+            
+            if (!prompt) {
+                alert("Lütfen ne paylaşmak istediğinizi kısaca yazın.");
+                return;
             }
 
-            // Using innerHTML so the prepended image <img> tag renders correctly
-            outputBox.innerHTML = data.content.generated_content;
-
-        } catch (err) {
-            outputBox.innerHTML = `
-                <div style="color: #D4450C; padding: 24px; border: 2px solid #D4450C; border-radius: 6px; background-color: #FDF5F2; font-family: 'Inter', sans-serif;">
-                    <b style="display: block; margin-bottom: 8px;">Üretim Sırasında Hata Oluştu</b>
-                    <span>${err.message}</span>
+            generateBtn.innerText = "ÜRETİLİYOR...";
+            generateBtn.disabled = true;
+            
+            // Remove grid placeholder
+            const gridPlaceholder = document.getElementById('gridPlaceholder');
+            if (gridPlaceholder) gridPlaceholder.remove();
+            
+            // Prepend a loading card
+            const imageGrid = document.getElementById('modalImageGrid');
+            const loadingCardId = 'loading-card-' + Date.now();
+            const loadingCardHtml = `
+                <div class="grid-card-loading" id="${loadingCardId}">
+                    <div class="loading-spinner"></div>
+                    <b>Yapay Zeka Hazırlıyor...</b>
+                    <span>Görsel çiziliyor ve metin kurgulanıyor.</span>
                 </div>
             `;
-        } finally {
-            generateBtn.innerText = "OLUSTUR";
-            generateBtn.style.opacity = "1";
-            generateBtn.disabled = false;
-        }
-    });
+            if (imageGrid) {
+                imageGrid.insertAdjacentHTML('afterbegin', loadingCardHtml);
+                imageGrid.scrollTop = 0;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/content/generate`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        contentType: currentType,
+                        userInput: prompt,
+                        aspectRatio: ratio,
+                        model: model,
+                        resolution: resolution,
+                        hd: hdQuality,
+                        enhanced: enhancedPrompt,
+                        temporaryOverrides: {
+                            industry: sector
+                        }
+                    })
+                });
+
+                const data = await res.json();
+
+                // Remove loading card
+                const loadingCard = document.getElementById(loadingCardId);
+                if (loadingCard) loadingCard.remove();
+
+                if (!res.ok) {
+                    throw new Error(data.error || data.message || 'Üretim hatası');
+                }
+
+                // Success
+                cachedHistory.unshift(data.content);
+                renderGrids();
+                
+                // Open detail drawer for new item
+                openDetailDrawer(data.content);
+
+            } catch (err) {
+                const loadingCard = document.getElementById(loadingCardId);
+                if (loadingCard) loadingCard.remove();
+
+                const errorHtml = `
+                    <div style="grid-column: 1/-1; color: #D4450C; padding: 24px; border: 2px solid #D4450C; border-radius: 6px; background-color: #FDF5F2; font-family: 'Inter', sans-serif; text-align: center;">
+                        <b style="display: block; margin-bottom: 8px;">Üretim Sırasında Hata Oluştu</b>
+                        <span>${err.message}</span>
+                    </div>
+                `;
+                if (imageGrid) {
+                    imageGrid.insertAdjacentHTML('afterbegin', errorHtml);
+                }
+            } finally {
+                generateBtn.innerText = "OLUŞTUR";
+                generateBtn.disabled = false;
+                document.getElementById('formPrompt').value = '';
+            }
+        });
+    }
 }

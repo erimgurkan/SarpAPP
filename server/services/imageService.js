@@ -12,9 +12,10 @@ const GRADIO_API_BASE = 'https://mrfakename-z-image-turbo.hf.space/gradio_api/ca
  * @param {string} prompt - The image prompt
  * @param {number} width - Output image width
  * @param {number} height - Output image height
+ * @param {number} retries - Number of retries on failure
  * @returns {Promise<string>} - URL or base64 of the generated image
  */
-async function generateImage(prompt, width = 1024, height = 1024) {
+async function generateImage(prompt, width = 1024, height = 1024, retries = 2) {
     if (!config.hfToken) {
         console.warn('⚠️ HF_TOKEN ayarlanmamış, resim üretilemeyecek.');
         return null; // Return null if no token is configured
@@ -105,11 +106,51 @@ async function generateImage(prompt, width = 1024, height = 1024) {
         throw new Error('Görsel üretildi ancak veri anlaşılamadı.');
 
     } catch (err) {
-        console.error('Image Generation Error:', err);
+        console.error(`Image Generation Error (kalan deneme: ${retries}):`, err);
+        if (retries > 0) {
+            console.log(`3 saniye sonra görsel üretimi yeniden denenecek...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            // Trigger a ping request to make sure the space is warm
+            await pingSpace();
+            return generateImage(prompt, width, height, retries - 1);
+        }
         return null;
     }
 }
 
+/**
+ * Keep-alive Hugging Face space function
+ */
+function startKeepAlive() {
+    console.log("ℹ️ Hugging Face Space Keep-Alive başlatıldı.");
+    // Run immediately
+    pingSpace();
+    // Run every 5 minutes (300000 ms)
+    setInterval(pingSpace, 300000);
+}
+
+async function pingSpace() {
+    try {
+        const res = await fetch("https://mrfakename-z-image-turbo.hf.space/", {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'PostCraftKeepAlive/1.0'
+            }
+        });
+        if (res.ok) {
+            console.log(`✅ Hugging Face Space aktif. Status: ${res.status}`);
+        } else {
+            console.warn(`⚠️ Hugging Face Space durum kodu: ${res.status}`);
+        }
+    } catch (err) {
+        console.error("❌ Hugging Face Space ping hatası:", err.message);
+    }
+}
+
+// Start keep alive automatically on load
+startKeepAlive();
+
 module.exports = {
-    generateImage
+    generateImage,
+    pingSpace
 };
