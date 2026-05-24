@@ -8,6 +8,7 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 const config = require('../config');
+const bcrypt = require('bcryptjs');
 
 // Ensure db directory exists
 const dbDir = path.dirname(config.db.path);
@@ -91,6 +92,40 @@ async function initDatabase() {
     db.run('CREATE INDEX IF NOT EXISTS idx_content_user ON generated_content(user_id)');
     db.run('CREATE INDEX IF NOT EXISTS idx_content_profile ON generated_content(profile_id)');
     db.run('CREATE INDEX IF NOT EXISTS idx_content_created ON generated_content(created_at)');
+
+    // Seed admin user if it does not exist
+    try {
+        const checkStmt = db.prepare('SELECT id FROM users WHERE email = ?');
+        checkStmt.bind(['admin@postmax.io']);
+        const hasAdmin = checkStmt.step();
+        checkStmt.free();
+
+        if (!hasAdmin) {
+            console.log('Seeding admin user...');
+            const passwordHash = bcrypt.hashSync('adminpassword123', 12);
+            
+            // Insert admin user
+            db.run('INSERT INTO users (name, email, password_hash, plan) VALUES (?, ?, ?, ?)', [
+                'Admin', 'admin@postmax.io', passwordHash, 'pro'
+            ]);
+
+            // Get the user ID
+            const idStmt = db.prepare('SELECT last_insert_rowid() as id');
+            idStmt.step();
+            const adminId = idStmt.get()[0];
+            idStmt.free();
+
+            // Insert default brand profile
+            db.run(`
+                INSERT INTO brand_profiles (user_id, name, sector, tone, target_audience, is_default)
+                VALUES (?, ?, ?, ?, ?, 1)
+            `, [adminId, 'Varsayılan İşletme', 'Genel', 'Samimi ve Profesyonel', 'Genel Müşteri']);
+            
+            console.log('✅ Admin user and default profile seeded successfully!');
+        }
+    } catch (e) {
+        console.error('Failed to seed admin user:', e.message);
+    }
 
     // Save to disk
     saveDatabase();

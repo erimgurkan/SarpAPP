@@ -19,7 +19,7 @@ router.use(auth);
 // ── Validation ─────────────────────────────────────────────
 
 const generateSchema = Joi.object({
-    profile_id: Joi.number().integer().positive().required()
+    profile_id: Joi.number().integer().positive().optional()
         .messages({ 'number.base': 'Bir marka profili seçmelisiniz.' }),
     content_type: Joi.string().valid(...config.contentTypes).required()
         .messages({ 'any.only': 'Geçerli bir içerik türü seçin.' }),
@@ -31,11 +31,36 @@ const generateSchema = Joi.object({
         }),
 });
 
-// ── POST /api/content/generate — Generate content ──────────
-
 router.post('/generate', checkUsageLimit, async (req, res) => {
     try {
-        const { error, value } = generateSchema.validate(req.body);
+        // Normalize request body to support camelCase from frontend
+        if (req.body.contentType && !req.body.content_type) {
+            req.body.content_type = req.body.contentType;
+        }
+        if (req.body.userInput && !req.body.user_input) {
+            req.body.user_input = req.body.userInput;
+        }
+        if (req.body.profileId && !req.body.profile_id) {
+            req.body.profile_id = req.body.profileId;
+        }
+
+        // If profile_id is not provided, fetch the user's first profile
+        if (!req.body.profile_id) {
+            let profile = db.prepare('SELECT id FROM brand_profiles WHERE user_id = ? ORDER BY id ASC LIMIT 1').get(req.user.id);
+            if (!profile) {
+                // If user has no profiles, create a default one on the fly
+                const stmt = db.prepare(`
+                    INSERT INTO brand_profiles (user_id, name, sector, tone, target_audience, is_default)
+                    VALUES (?, ?, ?, ?, ?, 1)
+                `);
+                const info = stmt.run(req.user.id, 'Varsayılan İşletme', 'Genel', 'Samimi ve Profesyonel', 'Genel Müşteri');
+                req.body.profile_id = info.lastInsertRowid;
+            } else {
+                req.body.profile_id = profile.id;
+            }
+        }
+
+        const { error, value } = generateSchema.validate(req.body, { stripUnknown: true });
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
