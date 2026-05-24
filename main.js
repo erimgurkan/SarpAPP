@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // API Base URL
-const API_URL = '/api';
+const API_URL = 'https://postmax-io.onrender.com/api';
 
 // State
 let currentToken = localStorage.getItem('postcraft_token') || null;
