@@ -346,78 +346,117 @@ body {
     display: none;
 }
 
-/* ── Dashboard View ───────────────────────────────────────── */
+/* ── Dashboard View (Brutalist Editorial Style) ────────────── */
 .dashboard-view {
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 48px;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-main);
+}
+
+.header-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    color: var(--text-black);
+}
+
 .btn-logout {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: 2px solid #E0E0E0;
-    padding: 4px 12px;
-    font-size: 0.8rem;
-    font-weight: 700;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
+    transition: opacity 0.2s ease;
 }
 
 .btn-logout:hover {
-    background: #000;
-    color: #FFF;
-    border-color: #000;
+    opacity: 0.8;
 }
 
-/* ── Grid Layout ──────────────────────────────────────────── */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    height: 100%;
-    width: 100%;
+/* ── Dashboard Body ───────────────────────────────────────── */
+.dashboard-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 48px;
+    gap: 60px;
 }
 
+.dashboard-left {
+    flex: 1.2;
+    text-align: left;
+}
+
+.dashboard-headline {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--text-black);
+    margin-bottom: 24px;
+}
+
+.dashboard-paragraph {
+    font-family: 'Georgia', serif;
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+    line-height: 1.5;
+    color: #333333;
+    max-width: 480px;
+}
+
+.dashboard-right {
+    flex: 0.8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ── Interactive Card (Formerly Grid Cell) ─────────────────── */
 .grid-cell {
-    border-right: 2px solid var(--border-color);
-    border-bottom: 2px solid var(--border-color);
-    position: relative;
+    border: 2px solid var(--text-black) !important;
+    border-radius: 12px;
+    padding: 48px;
+    background-color: #EBE5D9;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-/* Remove right borders for last column */
-.grid-cell:nth-child(4n) {
-    border-right: none;
-}
-
-/* Remove bottom borders for last row */
-.grid-cell:nth-child(n+5) {
-    border-bottom: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .grid-cell:hover {
-    background-color: #F0F0F0;
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    background-color: #E6DFD2;
 }
 
-/* ── Cell Content ─────────────────────────────────────────── */
 .cell-image {
-    width: 140px;
-    height: 140px;
+    width: 180px;
+    height: 180px;
     background-color: #E0E0E0;
-    /* Placeholder shadow to mimic the records in the reference */
     box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -2px -2px 8px rgba(255,255,255,0.8);
     margin-bottom: 32px;
     background-size: cover;
     background-position: center;
     transition: transform 0.2s ease;
+    border-radius: 8px;
 }
 
 .grid-cell:hover .cell-image {
@@ -425,23 +464,30 @@ body {
 }
 
 .cell-badge {
-    background-color: #FFFFFF;
-    color: var(--text-black);
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 10px 24px;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: none;
+    transition: background-color 0.2s ease;
+}
+
+.grid-cell:hover .cell-badge {
+    background-color: #333333;
 }
 
 /* ── Modal Overlay (For the Form) ─────────────────────────── */
 .modal-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(26, 26, 26, 0.8);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 26, 26, 0.6);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -457,7 +503,8 @@ body {
 }
 
 .modal-content {
-    background: var(--bg-light);
+    background: #F4F3ED; /* Cream background matching Anthropic style */
+    border: 2px solid var(--text-black);
     width: 90%;
     max-width: 600px;
     border-radius: 12px;
@@ -465,6 +512,7 @@ body {
     position: relative;
     transform: translateY(20px);
     transition: transform 0.3s ease;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.15);
 }
 
 .modal-overlay.active .modal-content {
@@ -477,18 +525,25 @@ body {
     right: 20px;
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     cursor: pointer;
     color: var(--text-black);
+    font-weight: 300;
+}
+
+.modal-close:hover {
+    color: #555;
 }
 
 /* ── Modal Form ───────────────────────────────────────────── */
 .form-title {
-    font-size: 1.5rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.8rem;
     font-weight: 800;
     text-transform: uppercase;
     margin-bottom: 24px;
     text-align: center;
+    color: var(--text-black);
 }
 
 .form-group {
@@ -497,25 +552,29 @@ body {
 
 .form-label {
     display: block;
+    font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 8px;
+    color: #555;
 }
 
 .form-control {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #E0E0E0;
-    border-radius: 8px;
+    border: 2px solid var(--text-black);
+    border-radius: 6px;
     background: #FFFFFF;
+    font-family: 'Inter', sans-serif;
     font-size: 1rem;
     font-weight: 500;
+    color: var(--text-black);
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--text-black);
+    border-color: #555;
 }
 
 textarea.form-control {
@@ -526,12 +585,13 @@ textarea.form-control {
 .btn-generate {
     width: 100%;
     padding: 16px;
-    background: var(--text-black);
+    background: #1A1A1A;
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
     font-size: 1rem;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
     transition: opacity 0.2s ease;
@@ -543,33 +603,37 @@ textarea.form-control {
 
 .output-box {
     margin-top: 24px;
-    padding: 16px;
-    background: #E0E0E0;
+    padding: 24px;
+    background: #EBE5D9;
+    border: 1px solid #C8C0B0;
     border-radius: 8px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-black);
     display: none;
     white-space: pre-wrap;
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
-    .grid-container {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(4, 1fr);
+    .dashboard-body {
+        flex-direction: column;
+        padding: 40px 24px;
+        gap: 40px;
+        overflow-y: auto;
     }
-    .grid-cell:nth-child(2n) { border-right: none; }
-    .grid-cell:nth-child(4n) { border-right: none; }
-    .grid-cell:nth-child(n+7) { border-bottom: none; }
+    .dashboard-left {
+        text-align: center;
+    }
+    .dashboard-paragraph {
+        margin: 0 auto;
+    }
 }
 
 @media (max-width: 600px) {
     body { padding: 0; }
     .app-container { border-radius: 0; height: 100vh; }
-    .grid-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(8, 1fr);
-    }
-    .grid-cell { border-right: none; border-bottom: 2px solid var(--border-color); }
-    .grid-cell:last-child { border-bottom: none; }
+    .top-header { padding: 16px 24px; }
+    .dashboard-body { padding: 24px 16px; }
 }
