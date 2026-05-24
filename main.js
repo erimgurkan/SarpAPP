@@ -106,16 +106,22 @@ function initAuth() {
         const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
         
         try {
+            const payload = { email, password };
+            if (!isLoginMode) {
+                // Backend requires a name for registration
+                payload.name = email.split('@')[0];
+            }
+
             const res = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || 'Bir hata oluştu');
+                throw new Error(data.error || data.message || 'Bir hata oluştu');
             }
 
             // Success
