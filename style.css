@@ -283,12 +283,18 @@ body {
 .auth-view {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(26, 26, 26, 0.4);
-    backdrop-filter: blur(4px);
+    background: rgba(26, 26, 26, 0);
+    backdrop-filter: blur(0px);
     display: none; /* hidden by default */
     align-items: center;
     justify-content: center;
     z-index: 50;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.auth-view.active {
+    background: rgba(26, 26, 26, 0.4);
+    backdrop-filter: blur(4px);
 }
 
 .auth-logo {
@@ -303,6 +309,25 @@ body {
     border-radius: 12px;
     padding: 40px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-view.active .auth-box {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Auth toggle transition animation */
+@keyframes authSwitch {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.97); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.auth-box.switching {
+    animation: authSwitch 0.3s ease-in-out;
 }
 
 .auth-title {
@@ -2132,6 +2157,30 @@ select.form-control {
     overflow-y: auto;
     padding: 40px 20px;
     box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-new-view.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Wizard active step transition animation */
+@keyframes stepFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wizard-step {
+    animation: stepFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .profile-new-header {

@@ -73,22 +73,42 @@ function initAuth() {
     // Open Auth Modal from Landing Page
     btnLandingLogin.addEventListener('click', () => {
         authView.style.display = 'flex';
+        void authView.offsetHeight; // force reflow
+        authView.classList.add('active');
     });
 
     // Close Auth Modal if clicked outside the box
     authView.addEventListener('click', (e) => {
         if (e.target === authView) {
-            authView.style.display = 'none';
+            authView.classList.remove('active');
+            setTimeout(() => {
+                authView.style.display = 'none';
+            }, 300);
         }
     });
 
     // Toggle Login/Register Mode
     btnAuthToggle.addEventListener('click', () => {
-        isLoginMode = !isLoginMode;
-        authTitle.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
-        btnAuthSubmit.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
-        btnAuthToggle.innerText = isLoginMode ? "Hesabın yok mu? KAYIT OL" : "Zaten hesabın var mı? GİRİŞ YAP";
-        authError.style.display = 'none';
+        const authBox = document.querySelector('.auth-box');
+        if (authBox) {
+            authBox.classList.add('switching');
+            setTimeout(() => {
+                isLoginMode = !isLoginMode;
+                authTitle.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
+                btnAuthSubmit.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
+                btnAuthToggle.innerText = isLoginMode ? "Hesabın yok mu? KAYIT OL" : "Zaten hesabın var mı? GİRİŞ YAP";
+                authError.style.display = 'none';
+            }, 150);
+            setTimeout(() => {
+                authBox.classList.remove('switching');
+            }, 300);
+        } else {
+            isLoginMode = !isLoginMode;
+            authTitle.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
+            btnAuthSubmit.innerText = isLoginMode ? "GİRİŞ YAP" : "KAYIT OL";
+            btnAuthToggle.innerText = isLoginMode ? "Hesabın yok mu? KAYIT OL" : "Zaten hesabın var mı? GİRİŞ YAP";
+            authError.style.display = 'none';
+        }
     });
 
     // Handle Submit
@@ -941,14 +961,26 @@ function initProfileWizard() {
     
     // Toggle new profile view
     btnNewProfile.addEventListener('click', () => {
-        dashboardView.style.display = 'none';
         profileNewView.style.display = 'block';
+        void profileNewView.offsetHeight; // force reflow
+        profileNewView.classList.add('active');
         resetWizard();
+        setTimeout(() => {
+            if (profileNewView.classList.contains('active')) {
+                dashboardView.style.display = 'none';
+            }
+        }, 350);
     });
     
     btnProfileNewBack.addEventListener('click', () => {
-        profileNewView.style.display = 'none';
         dashboardView.style.display = 'flex';
+        void dashboardView.offsetHeight; // force reflow
+        profileNewView.classList.remove('active');
+        setTimeout(() => {
+            if (!profileNewView.classList.contains('active')) {
+                profileNewView.style.display = 'none';
+            }
+        }, 350);
     });
     
     // Steps navigation state
