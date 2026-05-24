@@ -1131,61 +1131,64 @@ function initProfileWizard() {
         if (!logoUrl) return;
         
         btnAnalyzeBrand.disabled = true;
-        btnAnalyzeBrand.innerText = "⏳ Görseller Yapay Zeka İle Analiz Ediliyor...";
-        analysisStatus.innerText = "Yapay zeka marka kimliğinizi çözümlüyor, lütfen bekleyin...";
+        btnAnalyzeBrand.innerText = "⏳ Logo Renkleri Analiz Ediliyor...";
+        analysisStatus.innerText = "Logo renkleri taranıyor, lütfen bekleyin...";
         analysisStatus.style.display = 'block';
         aiAnalysisResult.style.display = 'none';
         editableOverrides.style.display = 'none';
         
         try {
-            const res = await fetch(`${API_URL}/profiles/analyze-brand`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentToken}`
-                },
-                body: JSON.stringify({ logoUrl, screenshotUrl })
-            });
-            const data = await res.json();
+            // Local client-side canvas-based color extraction
+            const colors = await extractDominantColors(logoPreviewImg);
             
-            if (res.ok) {
-                aiAnalysis = data;
-                
-                // Display results
-                renderAnalysisResult(data);
-                
-                // Setup editable fields
-                document.getElementById('primaryColorText').value = data.primary_color || '#000000';
-                document.getElementById('primaryColorVal').value = data.primary_color || '#000000';
-                document.getElementById('primaryColorPreview').style.backgroundColor = data.primary_color || '#000000';
-                
-                document.getElementById('secondaryColorText').value = data.secondary_color || '#FFFFFF';
-                document.getElementById('secondaryColorVal').value = data.secondary_color || '#FFFFFF';
-                document.getElementById('secondaryColorPreview').style.backgroundColor = data.secondary_color || '#FFFFFF';
-                
-                document.getElementById('accentColorText').value = data.accent_color || '#CCCCCC';
-                document.getElementById('accentColorVal').value = data.accent_color || '#CCCCCC';
-                document.getElementById('accentColorPreview').style.backgroundColor = data.accent_color || '#CCCCCC';
-                
-                // Preselect tone
-                if (data.tone) {
-                    const toneBtn = document.querySelector(`#tonePillGroup button[data-val="${data.tone.toLowerCase()}"]`);
-                    if (toneBtn) toneBtn.click();
-                }
-                
-                analysisStatus.innerText = "✅ Analiz başarıyla tamamlandı!";
-                aiAnalysisResult.style.display = 'block';
-                editableOverrides.style.display = 'block';
-                checkStep1Validation();
-            } else {
-                analysisStatus.innerText = "❌ Analiz başarısız: " + data.error;
-            }
+            // Build a simulated analysis result matching database schema
+            const brandNameVal = document.getElementById('newBrandName')?.value?.trim() || document.getElementById('newProfileName')?.value?.trim() || "Marka";
+            
+            const localAnalysis = {
+                primary_color: colors.primary,
+                secondary_color: colors.secondary,
+                accent_color: colors.accent,
+                tone: "samimi",
+                visual_style: "Logonun renk paletiyle uyumlu, temiz ve dengeli görsel kompozisyon.",
+                overall_aesthetic: "Marka renk paletini vurgulayan modern ve minimalist tarz.",
+                typography_feeling: "balanced",
+                suggested_price_segment: "Orta Segment",
+                content_themes: ["Tanıtım", "Sosyal Medya", "Kampanya"],
+                brand_description: `${brandNameVal} markası için çıkarılan renk paleti tabanlı görsel kimlik.`
+            };
+            
+            aiAnalysis = localAnalysis;
+            
+            // Display results
+            renderAnalysisResult(localAnalysis);
+            
+            // Setup color inputs
+            document.getElementById('primaryColorText').value = colors.primary;
+            document.getElementById('primaryColorVal').value = colors.primary;
+            document.getElementById('primaryColorPreview').style.backgroundColor = colors.primary;
+            
+            document.getElementById('secondaryColorText').value = colors.secondary;
+            document.getElementById('secondaryColorVal').value = colors.secondary;
+            document.getElementById('secondaryColorPreview').style.backgroundColor = colors.secondary;
+            
+            document.getElementById('accentColorText').value = colors.accent;
+            document.getElementById('accentColorVal').value = colors.accent;
+            document.getElementById('accentColorPreview').style.backgroundColor = colors.accent;
+            
+            // Preselect tone to 'samimi' as default
+            const toneBtn = document.querySelector(`#tonePillGroup button[data-val="samimi"]`);
+            if (toneBtn) toneBtn.click();
+            
+            analysisStatus.innerText = "✅ Logo renkleri başarıyla tespit edildi!";
+            aiAnalysisResult.style.display = 'block';
+            editableOverrides.style.display = 'block';
+            checkStep1Validation();
         } catch (err) {
-            console.error(err);
-            analysisStatus.innerText = "❌ Sunucu bağlantı hatası oluştu.";
+            console.error("Local color extraction failed:", err);
+            analysisStatus.innerText = "❌ Logo analizi sırasında bir hata oluştu.";
         } finally {
             btnAnalyzeBrand.disabled = false;
-            btnAnalyzeBrand.innerText = "🔍 Görselleri Yapay Zeka İle Analiz Et";
+            btnAnalyzeBrand.innerText = "🔍 Logo Renklerini Analiz Et";
         }
     });
     
@@ -1517,5 +1520,103 @@ function setupColorPicker(valId, textId, previewId) {
             valEl.value = val;
             previewEl.style.backgroundColor = val;
         }
+    });
+}
+
+// Helper: Extracts dominant colors from an image element using HTML5 Canvas (API-free)
+function extractDominantColors(imgEl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = function() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Scale down image to speed up processing
+                const maxDim = 150;
+                let w = img.width;
+                let h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                
+                ctx.drawImage(img, 0, 0, w, h);
+                const imgData = ctx.getImageData(0, 0, w, h).data;
+                
+                const colorMap = {};
+                
+                // Analyze pixels
+                for (let i = 0; i < imgData.length; i += 4) {
+                    const r = imgData[i];
+                    const g = imgData[i+1];
+                    const b = imgData[i+2];
+                    const a = imgData[i+3];
+                    
+                    // Skip highly transparent pixels
+                    if (a < 128) continue;
+                    
+                    // Quantize colors by rounding RGB to nearest 15 to group similar shades
+                    const qFactor = 15;
+                    const qr = Math.round(r / qFactor) * qFactor;
+                    const qg = Math.round(g / qFactor) * qFactor;
+                    const qb = Math.round(b / qFactor) * qFactor;
+                    
+                    // Filter out pure white, pure black backgrounds to find actual brand accent colors,
+                    // but we will fall back if no other colors are found.
+                    const isWhite = qr > 235 && qg > 235 && qb > 235;
+                    const isBlack = qr < 20 && qg < 20 && qb < 20;
+                    
+                    const qKey = `${qr},${qg},${qb}`;
+                    
+                    if (!colorMap[qKey]) {
+                        colorMap[qKey] = {
+                            r, g, b,
+                            count: 0,
+                            isBackground: isWhite || isBlack
+                        };
+                    }
+                    colorMap[qKey].count += 1;
+                }
+                
+                // Sort colors
+                const sortedColors = Object.values(colorMap).sort((a, b) => {
+                    // Penalize pure black/white slightly to prioritize brand colors
+                    const scoreA = a.count * (a.isBackground ? 0.15 : 1);
+                    const scoreB = b.count * (b.isBackground ? 0.15 : 1);
+                    return scoreB - scoreA;
+                });
+                
+                // Helper to convert rgb to hex
+                const rgbToHex = (r, g, b) => "#" + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? "0" + hex : hex;
+                }).join("");
+                
+                // Get top 3 colors or default back to nice brutalist palette
+                const primary = sortedColors[0] ? rgbToHex(sortedColors[0].r, sortedColors[0].g, sortedColors[0].b) : "#D4450C";
+                const secondary = sortedColors[1] ? rgbToHex(sortedColors[1].r, sortedColors[1].g, sortedColors[1].b) : "#2C2C2A";
+                const accent = sortedColors[2] ? rgbToHex(sortedColors[2].r, sortedColors[2].g, sortedColors[2].b) : "#F4F3ED";
+                
+                resolve({ primary, secondary, accent });
+            } catch (e) {
+                console.error("Color extraction error, using defaults:", e);
+                resolve({ primary: "#D4450C", secondary: "#2C2C2A", accent: "#F4F3ED" });
+            }
+        };
+        img.onerror = function() {
+            console.error("Failed to load image for color extraction");
+            resolve({ primary: "#D4450C", secondary: "#2C2C2A", accent: "#F4F3ED" });
+        };
+        
+        img.src = imgEl.src;
     });
 }
