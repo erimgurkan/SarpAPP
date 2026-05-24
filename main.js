@@ -321,9 +321,9 @@ function renderGrids() {
     
     if (cachedHistory.length === 0) {
         fullGalleryGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary); font-family: 'Inter', sans-serif;">
                 <span style="font-size: 2rem; display: block; margin-bottom: 12px;">📁</span>
-                <p>Galeri boş. Henüz hiç görsel üretmediniz.</p>
+                <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">Galeri boş. Henüz hiç görsel üretmediniz.</p>
             </div>
         `;
     } else {
@@ -345,7 +345,7 @@ function renderGrids() {
     const historyStrip = document.getElementById('studioHistoryStrip');
     if (historyStrip) {
         if (cachedHistory.length === 0) {
-            historyStrip.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-secondary); padding: 10px;">Henüz geçmiş tasarım yok.</span>`;
+            historyStrip.innerHTML = `<span style="font-size: 0.75rem; font-family: 'Inter', sans-serif; color: var(--text-secondary); padding: 10px;">Henüz geçmiş tasarım yok.</span>`;
             loadIntoStudio(null);
         } else {
             let stripHtml = '';
