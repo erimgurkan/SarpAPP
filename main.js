@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // API Base URL
-const API_URL = 'https://postmax-io.onrender.com/api';
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? (window.location.port === '3001' ? '/api' : 'http://localhost:3001/api')
+    : '/api';
 
 // State
 let currentToken = localStorage.getItem('postcraft_token') || null;
@@ -200,9 +202,9 @@ async function createDefaultProfile() {
             },
             body: JSON.stringify({
                 name: 'Varsayılan İşletme',
-                industry: 'Genel',
-                target_audience: 'Genel Müşteri',
-                tone: 'Samimi ve Profesyonel'
+                brand_name: 'Varsayılan Marka',
+                sector: 'Genel',
+                tone: 'samimi'
             })
         });
     } catch (err) {
