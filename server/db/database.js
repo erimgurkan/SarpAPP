@@ -51,20 +51,32 @@ async function initDatabase() {
 
     db.run(`
         CREATE TABLE IF NOT EXISTS brand_profiles (
-            id                INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id           INTEGER NOT NULL,
-            name              TEXT    NOT NULL,
-            sector            TEXT    NOT NULL,
-            tone              TEXT    DEFAULT 'samimi',
-            target_audience   TEXT,
-            primary_color     TEXT,
-            secondary_color   TEXT,
-            heading_font      TEXT,
-            body_font         TEXT,
-            brand_description TEXT,
-            sample_posts      TEXT,
-            is_default        INTEGER DEFAULT 0,
-            created_at        TEXT    DEFAULT (datetime('now')),
+            id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id               INTEGER NOT NULL,
+            name                  TEXT    NOT NULL,
+            brand_name            TEXT,
+            sector                TEXT    NOT NULL,
+            tone                  TEXT    DEFAULT 'samimi',
+            target_audience       TEXT, -- stored as JSON string
+            primary_color         TEXT,
+            secondary_color       TEXT,
+            accent_color          TEXT,
+            heading_font          TEXT,
+            body_font             TEXT,
+            brand_description     TEXT,
+            sample_posts          TEXT,
+            logo_url              TEXT,
+            screenshot_url        TEXT,
+            instagram_url         TEXT,
+            brand_analysis        TEXT, -- stored as JSON string
+            price_segment         TEXT,
+            brand_language        TEXT, -- stored as JSON string
+            competitor_accounts   TEXT, -- stored as JSON string (array)
+            content_language      TEXT,
+            typography_preference TEXT,
+            profile_tier          TEXT,
+            is_default            INTEGER DEFAULT 0,
+            created_at            TEXT    DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     `);
@@ -94,6 +106,20 @@ async function initDatabase() {
             last_reset TEXT DEFAULT (date('now'))
         )
     `);
+
+    // Safe migrations for existing databases to add new columns
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN brand_name TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN accent_color TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN logo_url TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN screenshot_url TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN instagram_url TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN brand_analysis TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN price_segment TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN brand_language TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN competitor_accounts TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN content_language TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN typography_preference TEXT"); } catch(e){}
+    try { db.run("ALTER TABLE brand_profiles ADD COLUMN profile_tier TEXT"); } catch(e){}
 
     // Create indexes
     db.run('CREATE INDEX IF NOT EXISTS idx_profiles_user ON brand_profiles(user_id)');

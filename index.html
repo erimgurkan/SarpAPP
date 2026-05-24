@@ -136,7 +136,15 @@
             
             <!-- HEADER -->
             <div class="top-header">
-                <span class="header-text">POSTMAX</span>
+                <div class="header-left">
+                    <span class="header-text">POSTMAX</span>
+                    <div class="profile-selector-container">
+                        <select id="dashboardProfileSelect" class="profile-select-brutalist">
+                            <option value="">Profil Yükleniyor...</option>
+                        </select>
+                        <button id="btnNewProfile" class="btn-new-profile-brutalist">+ Yeni Profil</button>
+                    </div>
+                </div>
                 <button class="btn-logout" id="btnLogout">Çıkış Yap</button>
             </div>
 
@@ -201,6 +209,13 @@
                         <div class="sidebar-section">
                             <h3 class="sidebar-section-title">Genel Ayarlar <span class="info-icon" title="Temel yapay zeka yapılandırma ayarları">i</span></h3>
                             
+                            <div class="form-group">
+                                <label class="form-label" for="formProfileSelect">AKTİF MARKA PROFİLİ</label>
+                                <select class="form-control" id="formProfileSelect">
+                                    <option value="">Yükleniyor...</option>
+                                </select>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label" for="formSector">SEKTÖRÜNÜZ</label>
                                 <input type="text" class="form-control" id="formSector" placeholder="Örn: Kafe, Kuaför, Eczane...">
@@ -440,6 +455,319 @@
         </div>
 
         </div> <!-- end dashboardView -->
+
+        <!-- NEW BRAND PROFILE WIZARD VIEW -->
+        <div id="profileNewView" class="profile-new-view" style="display: none;">
+            <div class="profile-new-header">
+                <button class="btn-profile-back" id="btnProfileNewBack">← Panoya Dön</button>
+                <div class="profile-new-title-container">
+                    <h1 class="profile-new-title">Yeni Marka Profili</h1>
+                    <p class="profile-new-subtitle">Yapay zeka entegrasyonu ile markanızın görsel kimliğini tanımlayın.</p>
+                </div>
+                <div class="profile-new-steps-indicator" id="profileStepsIndicator" style="display: none;">
+                    <!-- Steps will be generated here -->
+                </div>
+            </div>
+
+            <div class="profile-new-card">
+                <!-- STEP 0: TIER SELECTION -->
+                <div class="wizard-step" id="wizardStep0">
+                    <h2 class="step-headline">Profil Oluşturma Seviyesi Seçin</h2>
+                    <p class="step-subheadline">İhtiyacınıza en uygun derinlikte marka kimliği oluşturun.</p>
+                    
+                    <div class="tier-selection-grid">
+                        <div class="tier-card tier-hizli" data-tier="hizli">
+                            <div class="tier-header">
+                                <h3 class="tier-title">Hızlı Profil</h3>
+                                <span class="tier-duration">~2 dk</span>
+                            </div>
+                            <p class="tier-desc">Hemen hızlıca içerik üretmeye başlamak isteyenler için temel profil.</p>
+                            <ul class="tier-list">
+                                <li>Profil & marka adı</li>
+                                <li>Sektör & içerik dili</li>
+                                <li>Logo analizi & renk tespiti</li>
+                            </ul>
+                            <button class="btn-tier-select btn-hizli">Seç →</button>
+                        </div>
+
+                        <div class="tier-card tier-detayli" data-tier="detayli">
+                            <div class="tier-header">
+                                <h3 class="tier-title">Detaylı Profil</h3>
+                                <span class="tier-duration">~5 dk</span>
+                            </div>
+                            <p class="tier-desc">Daha kapsamlı marka kimliği ve Instagram görsel analizi için.</p>
+                            <ul class="tier-list">
+                                <li>Hızlı Profildeki her şey</li>
+                                <li>Instagram ekran görüntüsü analizi</li>
+                                <li>Fiyat segmenti & tipografi</li>
+                                <li>İlham veren/rakip hesaplar</li>
+                                <li>Hitap tarzı & emoji sıklığı</li>
+                            </ul>
+                            <button class="btn-tier-select btn-detayli">Seç →</button>
+                        </div>
+
+                        <div class="tier-card tier-cok-detayli" data-tier="cok_detayli">
+                            <div class="tier-header">
+                                <h3 class="tier-title">Çok Detaylı</h3>
+                                <span class="tier-duration">~10 dk</span>
+                            </div>
+                            <p class="tier-desc">Tam marka kişiliği, hitap dili kuralları ve detaylı hedef kitle için.</p>
+                            <ul class="tier-list">
+                                <li>Detaylı Profildeki her şey</li>
+                                <li>Hedef kitle (yaş, cinsiyet, ilgi)</li>
+                                <li>Noktalama & dil kuralları</li>
+                                <li>Asla / her zaman kullanılacak kelimeler</li>
+                            </ul>
+                            <button class="btn-tier-select btn-cok-detayli">Seç →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: VISUAL IDENTITY & GENERAL -->
+                <div class="wizard-step" id="wizardStep1" style="display: none;">
+                    <h2 class="step-headline">Adım 1: Temel Bilgiler & Görsel Kimlik</h2>
+                    
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="newProfileName">PROFİL ADI *</label>
+                            <input type="text" class="form-control" id="newProfileName" placeholder="Örn: Yaz Sezonu 2026">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="newBrandName">MARKA / İŞLETME ADI *</label>
+                            <input type="text" class="form-control" id="newBrandName" placeholder="Örn: Kahve Dünyası">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="newProfileSector">SEKTÖR *</label>
+                            <select class="form-control" id="newProfileSector">
+                                <option value="">Sektör Seçin</option>
+                                <option value="kafe">Kafe / Kahveci</option>
+                                <option value="restoran">Restoran / Yemek</option>
+                                <option value="butik">Butik / Giyim</option>
+                                <option value="kuafor">Kuaför / Güzellik Salonu</option>
+                                <option value="eczane">Eczane / Sağlık</option>
+                                <option value="fitness">Spor Salonu / Fitness</option>
+                                <option value="diger">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">İÇERİK DİLİ</label>
+                            <div class="radio-pill-group" id="langPillGroup">
+                                <button type="button" class="pill-btn active" data-val="Türkçe">Türkçe</button>
+                                <button type="button" class="pill-btn" data-val="İngilizce">İngilizce</button>
+                                <button type="button" class="pill-btn" data-val="Her ikisi">Her ikisi</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">MARKA LOGOSU *</label>
+                            <div class="file-upload-box" id="logoUploadBox">
+                                <span class="upload-icon">📁</span>
+                                <span class="upload-text">Logo Yüklemek İçin Tıklayın</span>
+                                <input type="file" id="inputLogoFile" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="file-preview-container" id="logoPreviewContainer" style="display: none;">
+                                <img id="logoPreviewImg" src="" alt="Logo Önizleme">
+                                <button type="button" class="btn-remove-file" id="btnRemoveLogo">Kaldır</button>
+                            </div>
+                        </div>
+                        <div class="form-group" id="screenshotGroup">
+                            <label class="form-label">INSTAGRAM EKRAN GÖRÜNTÜSÜ <span style="font-weight: normal; opacity: 0.6;">(Opsiyonel)</span></label>
+                            <div class="file-upload-box" id="screenshotUploadBox">
+                                <span class="upload-icon">📱</span>
+                                <span class="upload-text">Ekran Görüntüsü Yükleyin</span>
+                                <input type="file" id="inputScreenshotFile" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="file-preview-container" id="screenshotPreviewContainer" style="display: none;">
+                                <img id="screenshotPreviewImg" src="" alt="Screenshot Önizleme">
+                                <button type="button" class="btn-remove-file" id="btnRemoveScreenshot">Kaldır</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analyze-action-row" style="margin-top: 25px;">
+                        <button type="button" class="btn-analyze-brutalist" id="btnAnalyzeBrand">🔍 Görselleri Yapay Zeka İle Analiz Et</button>
+                    </div>
+
+                    <div class="analysis-status-message" id="analysisStatus"></div>
+
+                    <!-- AI ANALYSIS RESULT CARD -->
+                    <div class="ai-analysis-result-card" id="aiAnalysisResult" style="display: none;">
+                        <h4 class="analysis-card-title">🤖 Gemini Yapay Zeka Görsel Analizi</h4>
+                        <div class="analysis-card-body">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- EDITABLE OVERRIDES -->
+                    <div class="editable-overrides-card" id="editableOverrides" style="display: none;">
+                        <h4 class="analysis-card-title">✏️ Düzenlenebilir Marka Renkleri & Tonu</h4>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label class="form-label">BİRİNCİL RENK</label>
+                                <div class="color-picker-wrapper">
+                                    <div class="color-preview" id="primaryColorPreview"></div>
+                                    <input type="color" id="primaryColorVal" class="color-input">
+                                    <input type="text" id="primaryColorText" class="form-control color-text" placeholder="#000000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">İKİNCİL RENK</label>
+                                <div class="color-picker-wrapper">
+                                    <div class="color-preview" id="secondaryColorPreview"></div>
+                                    <input type="color" id="secondaryColorVal" class="color-input">
+                                    <input type="text" id="secondaryColorText" class="form-control color-text" placeholder="#FFFFFF">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">VURGU RENGİ</label>
+                                <div class="color-picker-wrapper">
+                                    <div class="color-preview" id="accentColorPreview"></div>
+                                    <input type="color" id="accentColorVal" class="color-input">
+                                    <input type="text" id="accentColorText" class="form-control color-text" placeholder="#CCCCCC">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label class="form-label">MARKA KONUŞMA TONU</label>
+                            <div class="radio-pill-group" id="tonePillGroup">
+                                <button type="button" class="pill-btn" data-val="samimi">Samimi</button>
+                                <button type="button" class="pill-btn" data-val="profesyonel">Profesyonel</button>
+                                <button type="button" class="pill-btn" data-val="enerjik">Enerjik</button>
+                                <button type="button" class="pill-btn" data-val="minimal">Minimal</button>
+                                <button type="button" class="pill-btn" data-val="premium">Premium</button>
+                                <button type="button" class="pill-btn" data-val="sicak">Sıcak</button>
+                                <button type="button" class="pill-btn" data-val="esprili">Esprili</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wizard-footer-buttons">
+                        <button type="button" class="btn-wizard-nav btn-wizard-back" id="btnStep1Back">Geri Seviye Seç</button>
+                        <button type="button" class="btn-wizard-nav btn-wizard-next" id="btnStep1Next" disabled>İleri →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: BRAND DETAILS (FOR DETAYLI & COK DETAYLI) -->
+                <div class="wizard-step" id="wizardStep2" style="display: none;">
+                    <h2 class="step-headline">Adım 2: Marka Detayları & Tercihler</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">FİYAT SEGMENTİ</label>
+                        <div class="radio-pill-group" id="pricePillGroup">
+                            <button type="button" class="pill-btn" data-val="Ekonomik">Ekonomik</button>
+                            <button type="button" class="pill-btn" data-val="Orta Segment">Orta Segment</button>
+                            <button type="button" class="pill-btn" data-val="Premium">Premium</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">TİPOGRAFİ TERCİHİ</label>
+                        <div class="radio-pill-group" id="typoPillGroup">
+                            <button type="button" class="pill-btn" data-val="Kalın/Bold">Kalın / Bold</button>
+                            <button type="button" class="pill-btn" data-val="İnce/Light">İnce / Light</button>
+                            <button type="button" class="pill-btn" data-val="Dengeli">Dengeli</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">HİTAP TARZI</label>
+                        <div class="radio-pill-group" id="addressPillGroup">
+                            <button type="button" class="pill-btn" data-val="Sen">Sen (Samimi / Doğal)</button>
+                            <button type="button" class="pill-btn" data-val="Siz">Siz (Resmi / Kurumsal)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">EMOJİ KULLANIM SIKLIĞI</label>
+                        <div class="radio-pill-group" id="emojiPillGroup">
+                            <button type="button" class="pill-btn" data-val="Hiç">Hiç Kullanma</button>
+                            <button type="button" class="pill-btn" data-val="Az">Az (Sadece CTA sonu)</button>
+                            <button type="button" class="pill-btn" data-val="Orta">Orta (Dengeli)</button>
+                            <button type="button" class="pill-btn" data-val="Çok">Çok (Renkli / Dikkat Çekici)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="newProfileCompetitors">RAKİP VEYA İLHAM ALINAN INSTAGRAM HESAPLARI <span style="font-weight: normal; opacity: 0.6;">(Virgülle ayırarak yazın, max 3)</span></label>
+                        <input type="text" class="form-control" id="newProfileCompetitors" placeholder="Örn: @starbuckstr, @kahvedunyasi">
+                    </div>
+
+                    <div class="wizard-footer-buttons">
+                        <button type="button" class="btn-wizard-nav btn-wizard-back" id="btnStep2Back">← Geri</button>
+                        <button type="button" class="btn-wizard-nav btn-wizard-next" id="btnStep2Next">İleri →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: AUDIENCE & VOICE (FOR COK DETAYLI) -->
+                <div class="wizard-step" id="wizardStep3" style="display: none;">
+                    <h2 class="step-headline">Adım 3: Hedef Kitle & Marka Dili Kuralları</h2>
+                    
+                    <div class="section-divider">Hedef Kitle</div>
+
+                    <div class="form-group">
+                        <label class="form-label">HEDEF KİTLE YAŞ ARALIĞI: <span id="ageRangeLabel" style="font-weight: 700;">18 - 45</span></label>
+                        <div class="range-sliders-container">
+                            <div class="slider-row">
+                                <span class="slider-limit-label">Min</span>
+                                <input type="range" min="18" max="65" value="18" id="ageMinSlider" class="brutalist-range-slider">
+                                <span class="slider-val-label" id="ageMinVal">18</span>
+                            </div>
+                            <div class="slider-row">
+                                <span class="slider-limit-label">Max</span>
+                                <input type="range" min="18" max="65" value="45" id="ageMaxSlider" class="brutalist-range-slider">
+                                <span class="slider-val-label" id="ageMaxVal">45</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">HEDEF KİTLE CİNSİYET TERCİHİ</label>
+                        <div class="checkbox-pill-group" id="genderCheckboxGroup">
+                            <button type="button" class="pill-btn" data-val="Kadın">Kadın</button>
+                            <button type="button" class="pill-btn" data-val="Erkek">Erkek</button>
+                            <button type="button" class="pill-btn active" data-val="Hepsi">Tüm Cinsiyetler</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="newProfileInterests">HEDEF KİTLE İLGİ ALANLARI <span style="font-weight: normal; opacity: 0.6;">(Virgülle ayırarak yazın)</span></label>
+                        <input type="text" class="form-control" id="newProfileInterests" placeholder="Örn: üçüncü nesil kahve, sanat, kitap, seyahat">
+                    </div>
+
+                    <div class="section-divider" style="margin-top: 30px;">Gelişmiş Marka Dili Kuralları</div>
+
+                    <div class="form-group">
+                        <label class="form-label">NOKTALAMA STİLİ</label>
+                        <div class="radio-pill-group" id="punctPillGroup">
+                            <button type="button" class="pill-btn" data-val="Standart">Standart Noktalama</button>
+                            <button type="button" class="pill-btn" data-val="Noktalama yok">Sadece Satır Sonlarında Boşluk (Noktalama Az)</button>
+                            <button type="button" class="pill-btn" data-val="Çok noktalı">Dikkat Çeken Çoklu Noktalama (Örn: !!!, ...)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="newProfileNeverWords">ASLA KULLANILMAYACAK KELİMELER <span style="font-weight: normal; opacity: 0.6;">(Virgülle ayırın)</span></label>
+                            <input type="text" class="form-control" id="newProfileNeverWords" placeholder="Örn: ucuz, fırsat, en iyisi">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="newProfileAlwaysWords">HER ZAMAN KULLANILACAK KELİMELER <span style="font-weight: normal; opacity: 0.6;">(Virgülle ayırın)</span></label>
+                            <input type="text" class="form-control" id="newProfileAlwaysWords" placeholder="Örn: taze, el yapımı, nitelikli">
+                        </div>
+                    </div>
+
+                    <div class="wizard-footer-buttons">
+                        <button type="button" class="btn-wizard-nav btn-wizard-back" id="btnStep3Back">← Geri</button>
+                        <button type="button" class="btn-wizard-nav btn-wizard-next" id="btnStep3Next">Profili Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </div>
 

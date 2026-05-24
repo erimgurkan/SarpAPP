@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     initGridModal();
+    initProfileWizard();
 });
 
 // API Base URL
@@ -164,6 +165,7 @@ function initAuth() {
         landingView.style.display = 'none';
         authView.style.display = 'none';
         dashboardView.style.display = 'flex';
+        loadProfiles();
     }
 }
 
@@ -702,6 +704,7 @@ function initGridModal() {
                         contentType: currentType,
                         userInput: prompt,
                         aspectRatio: ratio,
+                        profileId: parseInt(document.getElementById('formProfileSelect').value) || null,
                         ...(model && { model }),
                         resolution: resolution,
                         hd: hdQuality,
@@ -858,6 +861,629 @@ function loadIntoStudio(item) {
         thumb.classList.remove('active');
         if (parseInt(thumb.dataset.id) === item.id) {
             thumb.classList.add('active');
+        }
+    });
+}
+
+/* ── Profiles Dropdown & Wizard Logic (Etap 2) ─────────────── */
+let activeProfiles = [];
+
+async function loadProfiles() {
+    if (!currentToken) return;
+
+    try {
+        const res = await fetch(`${API_URL}/profiles`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`
+            }
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            activeProfiles = data.profiles || [];
+            
+            // Populate dashboard select
+            const dashboardSelect = document.getElementById('dashboardProfileSelect');
+            const formSelect = document.getElementById('formProfileSelect');
+            
+            if (dashboardSelect) {
+                dashboardSelect.innerHTML = activeProfiles.map(p => 
+                    `<option value="${p.id}" ${p.is_default ? 'selected' : ''}>${p.brand_name || p.name}</option>`
+                ).join('');
+                
+                // Add a listener to change profile
+                dashboardSelect.onchange = (e) => {
+                    const selectedId = parseInt(e.target.value);
+                    if (formSelect) formSelect.value = selectedId;
+                    // Trigger custom updates if needed
+                    const activeP = activeProfiles.find(p => p.id === selectedId);
+                    if (activeP) {
+                        const sectorInput = document.getElementById('formSector');
+                        if (sectorInput) sectorInput.value = activeP.sector;
+                    }
+                };
+            }
+            
+            if (formSelect) {
+                formSelect.innerHTML = activeProfiles.map(p => 
+                    `<option value="${p.id}" ${p.is_default ? 'selected' : ''}>${p.brand_name || p.name}</option>`
+                ).join('');
+                
+                formSelect.onchange = (e) => {
+                    const selectedId = parseInt(e.target.value);
+                    if (dashboardSelect) dashboardSelect.value = selectedId;
+                    const activeP = activeProfiles.find(p => p.id === selectedId);
+                    if (activeP) {
+                        const sectorInput = document.getElementById('formSector');
+                        if (sectorInput) sectorInput.value = activeP.sector;
+                    }
+                };
+                
+                // Trigger change to set initial sector
+                if (formSelect.value) {
+                    formSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Profiles loading failed:", err);
+    }
+}
+
+function initProfileWizard() {
+    const dashboardView = document.getElementById('dashboardView');
+    const profileNewView = document.getElementById('profileNewView');
+    const btnNewProfile = document.getElementById('btnNewProfile');
+    const btnProfileNewBack = document.getElementById('btnProfileNewBack');
+    
+    if (!btnNewProfile) return;
+    
+    // Toggle new profile view
+    btnNewProfile.addEventListener('click', () => {
+        dashboardView.style.display = 'none';
+        profileNewView.style.display = 'block';
+        resetWizard();
+    });
+    
+    btnProfileNewBack.addEventListener('click', () => {
+        profileNewView.style.display = 'none';
+        dashboardView.style.display = 'flex';
+    });
+    
+    // Steps navigation state
+    let currentStep = 0;
+    let selectedTier = ''; // 'hizli', 'detayli', 'cok_detayli'
+    let logoUrl = '';
+    let screenshotUrl = '';
+    let aiAnalysis = null;
+    
+    // File inputs & preview containers
+    const inputLogoFile = document.getElementById('inputLogoFile');
+    const logoUploadBox = document.getElementById('logoUploadBox');
+    const logoPreviewContainer = document.getElementById('logoPreviewContainer');
+    const logoPreviewImg = document.getElementById('logoPreviewImg');
+    const btnRemoveLogo = document.getElementById('btnRemoveLogo');
+    
+    const inputScreenshotFile = document.getElementById('inputScreenshotFile');
+    const screenshotUploadBox = document.getElementById('screenshotUploadBox');
+    const screenshotPreviewContainer = document.getElementById('screenshotPreviewContainer');
+    const screenshotPreviewImg = document.getElementById('screenshotPreviewImg');
+    const btnRemoveScreenshot = document.getElementById('btnRemoveScreenshot');
+    
+    // Custom radio pills handlers
+    setupPills('langPillGroup');
+    setupPills('tonePillGroup');
+    setupPills('pricePillGroup');
+    setupPills('typoPillGroup');
+    setupPills('addressPillGroup');
+    setupPills('emojiPillGroup');
+    setupPills('punctPillGroup');
+    setupCheckboxes('genderCheckboxGroup');
+    
+    // Step 0 select tier card
+    document.querySelectorAll('.tier-card').forEach(card => {
+        const btn = card.querySelector('.btn-tier-select');
+        btn.addEventListener('click', () => {
+            selectedTier = card.dataset.tier;
+            goToStep(1);
+        });
+    });
+    
+    // Logo Upload Logic
+    logoUploadBox.addEventListener('click', () => inputLogoFile.click());
+    inputLogoFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        logoUploadBox.style.display = 'none';
+        logoPreviewContainer.style.display = 'flex';
+        logoPreviewImg.src = URL.createObjectURL(file);
+        
+        // Upload file as base64 to local server
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const fileData = event.target.result;
+                logoUploadBox.querySelector('.upload-text').innerText = "Logo Yükleniyor...";
+                const res = await fetch(`${API_URL}/profiles/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ fileData, fileName: file.name })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    logoUrl = data.url;
+                    logoUploadBox.querySelector('.upload-text').innerText = "Logo Yüklemek İçin Tıklayın";
+                    checkStep1Validation();
+                } else {
+                    alert('Logo yüklenemedi: ' + data.error);
+                    btnRemoveLogo.click();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Logo yüklenirken hata oluştu.');
+                btnRemoveLogo.click();
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    btnRemoveLogo.addEventListener('click', () => {
+        inputLogoFile.value = '';
+        logoUrl = '';
+        logoPreviewImg.src = '';
+        logoPreviewContainer.style.display = 'none';
+        logoUploadBox.style.display = 'flex';
+        checkStep1Validation();
+    });
+    
+    // Screenshot Upload Logic
+    screenshotUploadBox.addEventListener('click', () => inputScreenshotFile.click());
+    inputScreenshotFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        screenshotUploadBox.style.display = 'none';
+        screenshotPreviewContainer.style.display = 'flex';
+        screenshotPreviewImg.src = URL.createObjectURL(file);
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const fileData = event.target.result;
+                screenshotUploadBox.querySelector('.upload-text').innerText = "Görsel Yükleniyor...";
+                const res = await fetch(`${API_URL}/profiles/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ fileData, fileName: file.name })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    screenshotUrl = data.url;
+                    screenshotUploadBox.querySelector('.upload-text').innerText = "Ekran Görüntüsü Yükleyin";
+                } else {
+                    alert('Görsel yüklenemedi: ' + data.error);
+                    btnRemoveScreenshot.click();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Görsel yüklenirken hata oluştu.');
+                btnRemoveScreenshot.click();
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    btnRemoveScreenshot.addEventListener('click', () => {
+        inputScreenshotFile.value = '';
+        screenshotUrl = '';
+        screenshotPreviewImg.src = '';
+        screenshotPreviewContainer.style.display = 'none';
+        screenshotUploadBox.style.display = 'flex';
+    });
+    
+    // AI analysis trigger button
+    const btnAnalyzeBrand = document.getElementById('btnAnalyzeBrand');
+    const analysisStatus = document.getElementById('analysisStatus');
+    const aiAnalysisResult = document.getElementById('aiAnalysisResult');
+    const editableOverrides = document.getElementById('editableOverrides');
+    
+    btnAnalyzeBrand.addEventListener('click', async () => {
+        if (!logoUrl) return;
+        
+        btnAnalyzeBrand.disabled = true;
+        btnAnalyzeBrand.innerText = "⏳ Görseller Yapay Zeka İle Analiz Ediliyor...";
+        analysisStatus.innerText = "Yapay zeka marka kimliğinizi çözümlüyor, lütfen bekleyin...";
+        analysisStatus.style.display = 'block';
+        aiAnalysisResult.style.display = 'none';
+        editableOverrides.style.display = 'none';
+        
+        try {
+            const res = await fetch(`${API_URL}/profiles/analyze-brand`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify({ logoUrl, screenshotUrl })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                aiAnalysis = data;
+                
+                // Display results
+                renderAnalysisResult(data);
+                
+                // Setup editable fields
+                document.getElementById('primaryColorText').value = data.primary_color || '#000000';
+                document.getElementById('primaryColorVal').value = data.primary_color || '#000000';
+                document.getElementById('primaryColorPreview').style.backgroundColor = data.primary_color || '#000000';
+                
+                document.getElementById('secondaryColorText').value = data.secondary_color || '#FFFFFF';
+                document.getElementById('secondaryColorVal').value = data.secondary_color || '#FFFFFF';
+                document.getElementById('secondaryColorPreview').style.backgroundColor = data.secondary_color || '#FFFFFF';
+                
+                document.getElementById('accentColorText').value = data.accent_color || '#CCCCCC';
+                document.getElementById('accentColorVal').value = data.accent_color || '#CCCCCC';
+                document.getElementById('accentColorPreview').style.backgroundColor = data.accent_color || '#CCCCCC';
+                
+                // Preselect tone
+                if (data.tone) {
+                    const toneBtn = document.querySelector(`#tonePillGroup button[data-val="${data.tone.toLowerCase()}"]`);
+                    if (toneBtn) toneBtn.click();
+                }
+                
+                analysisStatus.innerText = "✅ Analiz başarıyla tamamlandı!";
+                aiAnalysisResult.style.display = 'block';
+                editableOverrides.style.display = 'block';
+                checkStep1Validation();
+            } else {
+                analysisStatus.innerText = "❌ Analiz başarısız: " + data.error;
+            }
+        } catch (err) {
+            console.error(err);
+            analysisStatus.innerText = "❌ Sunucu bağlantı hatası oluştu.";
+        } finally {
+            btnAnalyzeBrand.disabled = false;
+            btnAnalyzeBrand.innerText = "🔍 Görselleri Yapay Zeka İle Analiz Et";
+        }
+    });
+    
+    // Color pickers sync logic
+    setupColorPicker('primaryColorVal', 'primaryColorText', 'primaryColorPreview');
+    setupColorPicker('secondaryColorVal', 'secondaryColorText', 'secondaryColorPreview');
+    setupColorPicker('accentColorVal', 'accentColorText', 'accentColorPreview');
+    
+    // Range Sliders
+    const ageMinSlider = document.getElementById('ageMinSlider');
+    const ageMaxSlider = document.getElementById('ageMaxSlider');
+    const ageMinVal = document.getElementById('ageMinVal');
+    const ageMaxVal = document.getElementById('ageMaxVal');
+    const ageRangeLabel = document.getElementById('ageRangeLabel');
+    
+    function updateAgeLabel() {
+        let min = parseInt(ageMinSlider.value);
+        let max = parseInt(ageMaxSlider.value);
+        if (min >= max) {
+            min = max - 1;
+            ageMinSlider.value = min;
+        }
+        ageMinVal.innerText = min;
+        ageMaxVal.innerText = max;
+        ageRangeLabel.innerText = `${min} - ${max}`;
+    }
+    ageMinSlider.addEventListener('input', updateAgeLabel);
+    ageMaxSlider.addEventListener('input', updateAgeLabel);
+    
+    // Step validation checks
+    const newProfileName = document.getElementById('newProfileName');
+    const newBrandName = document.getElementById('newBrandName');
+    const newProfileSector = document.getElementById('newProfileSector');
+    
+    function checkStep1Validation() {
+        const isNameOk = newProfileName.value.trim().length > 0;
+        const isBrandOk = newBrandName.value.trim().length > 0;
+        const isSectorOk = newProfileSector.value.length > 0;
+        const isLogoOk = logoUrl.length > 0;
+        const isAnalysisOk = aiAnalysis !== null;
+        
+        const btnNext = document.getElementById('btnStep1Next');
+        if (isNameOk && isBrandOk && isSectorOk && isLogoOk && isAnalysisOk) {
+            btnNext.disabled = false;
+            btnNext.innerText = selectedTier === 'hizli' ? 'Profili Kaydet' : 'İleri →';
+        } else {
+            btnNext.disabled = true;
+            btnNext.innerText = selectedTier === 'hizli' ? 'Profili Kaydet' : 'İleri →';
+        }
+    }
+    
+    newProfileName.addEventListener('input', checkStep1Validation);
+    newBrandName.addEventListener('input', checkStep1Validation);
+    newProfileSector.addEventListener('change', checkStep1Validation);
+    
+    // Steps navigation clicks
+    document.getElementById('btnStep1Back').addEventListener('click', () => goToStep(0));
+    document.getElementById('btnStep1Next').addEventListener('click', () => {
+        if (selectedTier === 'hizli') {
+            saveProfile();
+        } else {
+            goToStep(2);
+        }
+    });
+    
+    document.getElementById('btnStep2Back').addEventListener('click', () => goToStep(1));
+    document.getElementById('btnStep2Next').addEventListener('click', () => {
+        if (selectedTier === 'detayli') {
+            saveProfile();
+        } else {
+            goToStep(3);
+        }
+    });
+    
+    document.getElementById('btnStep3Back').addEventListener('click', () => goToStep(2));
+    document.getElementById('btnStep3Next').addEventListener('click', () => saveProfile());
+    
+    // Helper to switch active step views
+    function goToStep(step) {
+        currentStep = step;
+        
+        // Hide all steps
+        document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
+        
+        // Show active step
+        document.getElementById(`wizardStep${step}`).style.display = 'block';
+        
+        // Steps indicator
+        const stepsIndicator = document.getElementById('profileStepsIndicator');
+        if (step === 0) {
+            stepsIndicator.style.display = 'none';
+        } else {
+            stepsIndicator.style.display = 'flex';
+            const totalSteps = selectedTier === 'hizli' ? 1 : selectedTier === 'detayli' ? 2 : 3;
+            stepsIndicator.innerHTML = Array.from({ length: totalSteps }, (_, i) => {
+                let statusClass = 'pending';
+                if (step === i + 1) statusClass = 'active';
+                if (step > i + 1) statusClass = 'completed';
+                return `<div class="step-dot ${statusClass}">${i + 1}</div>`;
+            }).join('<div class="step-connector"></div>');
+        }
+        
+        // Screenshot field conditional
+        const screenshotGroup = document.getElementById('screenshotGroup');
+        if (screenshotGroup) {
+            screenshotGroup.style.display = selectedTier === 'hizli' ? 'none' : 'block';
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function resetWizard() {
+        newProfileName.value = '';
+        newBrandName.value = '';
+        newProfileSector.value = '';
+        btnRemoveLogo.click();
+        btnRemoveScreenshot.click();
+        
+        analysisStatus.style.display = 'none';
+        analysisStatus.innerText = '';
+        aiAnalysisResult.style.display = 'none';
+        editableOverrides.style.display = 'none';
+        aiAnalysis = null;
+        
+        // Set defaults for pills
+        resetPills('langPillGroup', 'Türkçe');
+        resetPills('tonePillGroup', 'samimi');
+        resetPills('pricePillGroup', 'Orta Segment');
+        resetPills('typoPillGroup', 'Dengeli');
+        resetPills('addressPillGroup', 'Sen');
+        resetPills('emojiPillGroup', 'Orta');
+        resetPills('punctPillGroup', 'Standart');
+        resetPills('genderCheckboxGroup', 'Hepsi');
+        
+        document.getElementById('newProfileCompetitors').value = '';
+        document.getElementById('newProfileInterests').value = '';
+        document.getElementById('newProfileNeverWords').value = '';
+        document.getElementById('newProfileAlwaysWords').value = '';
+        
+        ageMinSlider.value = 18;
+        ageMaxSlider.value = 45;
+        updateAgeLabel();
+        
+        goToStep(0);
+    }
+    
+    function renderAnalysisResult(data) {
+        const body = document.querySelector('#aiAnalysisResult .analysis-card-body');
+        const themes = data.content_themes ? data.content_themes.map(t => `<span class="analysis-tag">${t}</span>`).join('') : '-';
+        body.innerHTML = `
+            <div class="result-item"><strong>Marka Açıklaması:</strong> ${data.brand_description || '-'}</div>
+            <div class="result-item"><strong>Görsel Stil:</strong> ${data.visual_style || '-'}</div>
+            <div class="result-item"><strong>Genel Estetik:</strong> ${data.overall_aesthetic || '-'}</div>
+            <div class="result-item"><strong>Tipografi Duygusu:</strong> <span class="analysis-tag">${data.typography_feeling || '-'}</span></div>
+            <div class="result-item"><strong>Fiyat Segmenti Önerisi:</strong> <span class="analysis-tag">${data.suggested_price_segment || '-'}</span></div>
+            <div class="result-item"><strong>Temalar:</strong> <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px;">${themes}</div></div>
+        `;
+    }
+    
+    async function saveProfile() {
+        const saveBtn = document.getElementById(`btnStep${currentStep}Next`);
+        saveBtn.disabled = true;
+        saveBtn.innerText = "⏳ Kaydediliyor...";
+        
+        const activeToneBtn = document.querySelector('#tonePillGroup button.active');
+        const activeLangBtn = document.querySelector('#langPillGroup button.active');
+        
+        const payload = {
+            name: newProfileName.value.trim(),
+            brand_name: newBrandName.value.trim(),
+            sector: newProfileSector.value,
+            tone: activeToneBtn ? activeToneBtn.dataset.val : 'samimi',
+            primary_color: document.getElementById('primaryColorText').value,
+            secondary_color: document.getElementById('secondaryColorText').value,
+            accent_color: document.getElementById('accentColorText').value,
+            logo_url: logoUrl,
+            screenshot_url: screenshotUrl || null,
+            brand_analysis: aiAnalysis,
+            profile_tier: selectedTier,
+            content_language: activeLangBtn ? activeLangBtn.dataset.val : 'Türkçe',
+        };
+        
+        if (selectedTier !== 'hizli') {
+            const activePriceBtn = document.querySelector('#pricePillGroup button.active');
+            const activeTypoBtn = document.querySelector('#typoPillGroup button.active');
+            const activeAddressBtn = document.querySelector('#addressPillGroup button.active');
+            const activeEmojiBtn = document.querySelector('#emojiPillGroup button.active');
+            
+            payload.price_segment = activePriceBtn ? activePriceBtn.dataset.val : 'Orta Segment';
+            payload.typography_preference = activeTypoBtn ? activeTypoBtn.dataset.val : 'Dengeli';
+            
+            payload.competitor_accounts = document.getElementById('newProfileCompetitors').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+                
+            payload.brand_language = {
+                address_style: activeAddressBtn ? activeAddressBtn.dataset.val : 'Sen',
+                emoji_usage: activeEmojiBtn ? activeEmojiBtn.dataset.val : 'Orta',
+            };
+        }
+        
+        if (selectedTier === 'cok_detayli') {
+            const activePunctBtn = document.querySelector('#punctPillGroup button.active');
+            const activeGenders = Array.from(document.querySelectorAll('#genderCheckboxGroup button.active')).map(b => b.dataset.val);
+            
+            payload.brand_language.punctuation_style = activePunctBtn ? activePunctBtn.dataset.val : 'Standart';
+            payload.brand_language.never_words = document.getElementById('newProfileNeverWords').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+            payload.brand_language.always_words = document.getElementById('newProfileAlwaysWords').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+                
+            payload.target_audience = {
+                age_min: parseInt(ageMinSlider.value),
+                age_max: parseInt(ageMaxSlider.value),
+                gender: activeGenders,
+                interests: document.getElementById('newProfileInterests').value
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+            };
+        }
+        
+        try {
+            const res = await fetch(`${API_URL}/profiles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Refresh list & close
+                await loadProfiles();
+                // Find and select newly created profile
+                const selectEl = document.getElementById('dashboardProfileSelect');
+                if (selectEl && data.profile) {
+                    selectEl.value = data.profile.id;
+                    selectEl.dispatchEvent(new Event('change'));
+                }
+                btnProfileNewBack.click();
+            } else {
+                alert('Profil kaydedilemedi: ' + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Kaydetme sırasında bir sunucu hatası oluştu.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerText = currentStep === 3 ? "Profili Kaydet" : "İleri →";
+        }
+    }
+}
+
+// Helper: Custom Radio Pills
+function setupPills(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+}
+
+function resetPills(containerId, defaultVal) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('button').forEach(b => {
+        if (b.dataset.val === defaultVal) {
+            b.classList.add('active');
+        } else {
+            b.classList.remove('active');
+        }
+    });
+}
+
+// Helper: Checkbox Pills (multi-select)
+function setupCheckboxes(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        
+        const val = btn.dataset.val;
+        if (val === 'Hepsi') {
+            container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        } else {
+            const hepsiBtn = container.querySelector('button[data-val="Hepsi"]');
+            if (hepsiBtn) hepsiBtn.classList.remove('active');
+            
+            btn.classList.toggle('active');
+            
+            // If nothing is selected, default back to Hepsi
+            const activeCount = container.querySelectorAll('button.active').length;
+            if (activeCount === 0 && hepsiBtn) {
+                hepsiBtn.classList.add('active');
+            }
+        }
+    });
+}
+
+// Helper: Sync color inputs
+function setupColorPicker(valId, textId, previewId) {
+    const valEl = document.getElementById(valId);
+    const textEl = document.getElementById(textId);
+    const previewEl = document.getElementById(previewId);
+    
+    if (!valEl || !textEl || !previewEl) return;
+    
+    valEl.addEventListener('input', (e) => {
+        textEl.value = e.target.value.toUpperCase();
+        previewEl.style.backgroundColor = e.target.value;
+    });
+    
+    textEl.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+            valEl.value = val;
+            previewEl.style.backgroundColor = val;
         }
     });
 }

@@ -2,6 +2,7 @@
    PostCraft — Base Prompt (Katman 1)
    Tüm içerik türlerinde geçerli olan temel kurallar
    AI kokusu yasakları, Türkçe yazım stili, platform kuralları
+   Enriched with brand profiles properties from stage 2
    ═══════════════════════════════════════════════════════════ */
 
 /**
@@ -31,21 +32,65 @@ module.exports = function buildBasePrompt(profile) {
         esprili: 'esprili ve eğlenceli — gülümseten ama saygılı',
     };
 
-    const sectorName = sectorNames[profile?.sector] || 'Genel İşletme';
+    // Helper functions or parsing
+    let targetAudience = profile?.target_audience || 'Türkiye\'deki 25-50 yaş arası Instagram kullanıcıları';
+    if (typeof targetAudience === 'string' && targetAudience.trim().startsWith('{')) {
+        try {
+            const ta = JSON.parse(targetAudience);
+            targetAudience = `Yaş Aralığı: ${ta.age_min || 18}-${ta.age_max || 65}, Cinsiyet: ${ta.gender?.join(', ') || 'Hepsi'}, İlgi Alanları: ${ta.interests?.join(', ') || 'Genel'}`;
+        } catch(e){}
+    }
+
+    let brandLanguage = '';
+    if (profile?.brand_language) {
+        let bl = profile.brand_language;
+        if (typeof bl === 'string') {
+            try { bl = JSON.parse(bl); } catch(e){}
+        }
+        if (typeof bl === 'object' && bl !== null) {
+            brandLanguage = `
+• Hitap Tarzı: ${bl.address_style || 'Belirtilmemiş'}
+• Emoji Kullanımı: ${bl.emoji_usage || 'Belirtilmemiş'}
+${bl.punctuation_style ? `• Noktalama Tercihi: ${bl.punctuation_style}` : ''}
+${bl.never_words?.length ? `• ASLA Kullanılmayacak Kelimeler: ${bl.never_words.join(', ')}` : ''}
+${bl.always_words?.length ? `• Her Zaman Kullanılacak Kelimeler: ${bl.always_words.join(', ')}` : ''}
+`;
+        }
+    }
+
+    let competitors = '';
+    if (profile?.competitor_accounts) {
+        let ca = profile.competitor_accounts;
+        if (typeof ca === 'string') {
+            try { ca = JSON.parse(ca); } catch(e){}
+        }
+        if (Array.isArray(ca) && ca.length > 0) {
+            competitors = `• Rakip/İlham Hesaplar: ${ca.join(', ')}`;
+        } else if (typeof ca === 'string' && ca.trim()) {
+            competitors = `• Rakip/İlham Hesaplar: ${ca}`;
+        }
+    }
+
+    const sectorName = sectorNames[profile?.sector?.toLowerCase()] || profile?.sector || 'Genel İşletme';
     const toneDesc = toneDescriptions[profile?.tone] || toneDescriptions.samimi;
 
     return `SEN: Türkiye'deki küçük işletmeler için Instagram içerikleri üreten deneyimli bir içerik uzmanısın. Yıllardır Türk KOBİ'lerin sosyal medya yönetimini yapıyorsun. Instagram'ın Türkiye'deki kullanım kültürünü, trendlerini ve dilini çok iyi biliyorsun.
 
 BU İÇERİK İÇİN ÇALIŞTIĞIN İŞLETME:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Marka / İşletme Adı: ${profile?.brand_name || profile?.name || 'Belirtilmemiş'}
 • Sektör: ${sectorName}
-• İşletme adı/açıklaması: ${profile?.brand_description || 'Belirtilmemiş — genel sektör bilgisiyle çalış'}
-• Hedef kitle: ${profile?.target_audience || 'Türkiye\'deki 25-50 yaş arası Instagram kullanıcıları'}
+• İşletme açıklaması: ${profile?.brand_description || 'Belirtilmemiş — genel sektör bilgisiyle çalış'}
+• Hedef kitle: ${targetAudience}
 • Marka tonu: ${toneDesc}
+${profile?.price_segment ? `• Fiyat Segmenti: ${profile.price_segment}` : ''}
+${profile?.content_language ? `• İçerik Dili Tercihi: ${profile.content_language}` : ''}
+${profile?.typography_preference ? `• Tipografi Tercihi: ${profile.typography_preference}` : ''}
 ${profile?.primary_color ? `• Birincil marka rengi: ${profile.primary_color}` : ''}
 ${profile?.secondary_color ? `• İkincil marka rengi: ${profile.secondary_color}` : ''}
-${profile?.heading_font ? `• Başlık fontu: ${profile.heading_font}` : ''}
-${profile?.body_font ? `• Gövde fontu: ${profile.body_font}` : ''}
+${profile?.accent_color ? `• Vurgu marka rengi: ${profile.accent_color}` : ''}
+${competitors ? competitors : ''}
+${brandLanguage ? brandLanguage : ''}
 ${profile?.sample_posts ? `• Beğendiği örnek içerik tarzı: ${profile.sample_posts}` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
