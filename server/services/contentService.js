@@ -37,7 +37,17 @@ async function createContent(userId, profileId, contentType, userInput) {
     const fullPrompt = buildFullPrompt(contentType, userInput, profile);
 
     // 3. OpenAI API'ye gönder
-    const result = await generateContent(fullPrompt);
+    let result;
+    try {
+        result = await generateContent(fullPrompt);
+    } catch (e) {
+        console.warn("OpenAI Hatası (Mock üretiliyor):", e.message);
+        result = {
+            content: "*(Metin üretimi pas geçildi: OpenAI API anahtarı bulunamadı)*\n\nSadece HuggingFace görseli test ediliyor...",
+            model: "mock-model",
+            tokens: 0
+        };
+    }
 
     // 3.5 HuggingFace ile Görsel Üret (Eğer API key varsa)
     const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. vibrant, stunning, highly detailed`;
