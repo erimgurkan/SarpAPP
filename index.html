@@ -208,12 +208,43 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="formModel">MODEL SEÇİCİ</label>
-                                <select class="form-control" id="formModel">
-                                    <option value="z-turbo" selected>Z-Image-Turbo (Hızlı)</option>
-                                    <option value="flux-schnell">FLUX.1-schnell (HD)</option>
-                                    <option value="dall-e-3">DALL-E 3 (Detaylı)</option>
-                                </select>
+                                <label class="form-label">YAPAY ZEKA MOTORU <span class="info-icon" title="Sistem, günlük limitlere göre modeller arasında otomatik geçiş yapar.">i</span></label>
+                                <div class="premium-engine-card">
+                                    <div class="engine-card-header">
+                                        <span class="engine-badge active">● DİNAMİK ZİNCİR</span>
+                                        <h4 class="engine-title">Gemini Imagen 4.0</h4>
+                                    </div>
+                                    <p class="engine-desc">Sistem, RPD (Günlük İstek Limiti) dolduğunda bir sonraki modelden otomatik devam eder.</p>
+                                    
+                                    <div class="model-status-list">
+                                        <div class="model-status-item" id="status-generate" title="Standart yüksek kaliteli görsel üretimi">
+                                            <div class="model-status-info">
+                                                <span class="model-status-dot active" id="dot-generate"></span>
+                                                <span class="model-status-name">Imagen 4.0 Standart</span>
+                                                <span class="model-status-rpd" id="rpd-generate">0/25 RPD</span>
+                                            </div>
+                                            <div class="model-status-progress"><div class="progress-fill" id="progress-generate" style="width: 0%"></div></div>
+                                        </div>
+                                        
+                                        <div class="model-status-item" id="status-ultra" title="Çok yüksek çözünürlüklü ve detaylı görsel üretimi">
+                                            <div class="model-status-info">
+                                                <span class="model-status-dot" id="dot-ultra"></span>
+                                                <span class="model-status-name">Imagen 4.0 Ultra</span>
+                                                <span class="model-status-rpd" id="rpd-ultra">0/25 RPD</span>
+                                            </div>
+                                            <div class="model-status-progress"><div class="progress-fill" id="progress-ultra" style="width: 0%"></div></div>
+                                        </div>
+                                        
+                                        <div class="model-status-item" id="status-fast" title="Hızlı taslak/görsel üretimi">
+                                            <div class="model-status-info">
+                                                <span class="model-status-dot" id="dot-fast"></span>
+                                                <span class="model-status-name">Imagen 4.0 Hızlı</span>
+                                                <span class="model-status-rpd" id="rpd-fast">0/25 RPD</span>
+                                            </div>
+                                            <div class="model-status-progress"><div class="progress-fill" id="progress-fast" style="width: 0%"></div></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">

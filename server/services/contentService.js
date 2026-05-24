@@ -23,7 +23,7 @@ const { generateImage } = require('./imageService');
  * @param {string} userInput - Kullanıcı girdisi
  * @returns {Object} Üretilen içerik verisi
  */
-async function createContent(userId, profileId, contentType, userInput, aspectRatio = '1:1') {
+async function createContent(userId, profileId, contentType, userInput, aspectRatio = '1:1', modelOverride = null) {
     // 1. Profili getir ve doğrula
     const profile = db.prepare(
         'SELECT * FROM brand_profiles WHERE id = ? AND user_id = ?'
@@ -49,17 +49,30 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
         };
     }
 
-    // 3.5 HuggingFace ile Görsel Üret (Eğer API key varsa)
+    // 3.5 Google Gemini Imagen 4.0 ile Görsel Üret
     let formatModifier = 'square composition, centered shot';
+    let width = 1024;
+    let height = 1024;
 
     if (aspectRatio === '9:16') {
         formatModifier = 'vertical orientation, vertical portrait, instagram story style, mobile wallpaper layout';
+        width = 576;
+        height = 1024;
     } else if (aspectRatio === '16:9') {
         formatModifier = 'horizontal orientation, wide angle view, cinematic landscape view';
+        width = 1024;
+        height = 576;
     }
 
     const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. ${formatModifier}. vibrant, stunning, highly detailed`;
-    const imageUrl = await generateImage(imagePrompt, 1024, 1024);
+    const imageResult = await generateImage(imagePrompt, width, height, 2, modelOverride);
+    
+    let imageUrl = null;
+    let imageModelUsed = null;
+    if (imageResult) {
+        imageUrl = imageResult.imageUrl;
+        imageModelUsed = imageResult.modelUsed;
+    }
     
     if (imageUrl) {
         let imgStyle = 'max-width: 100%; max-height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
@@ -85,6 +98,8 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
+    const finalModelName = imageModelUsed || result.model;
+
     const info = stmt.run(
         userId,
         profileId,
@@ -92,7 +107,7 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
         userInput,
         result.content,
         fullPrompt,
-        result.model,
+        finalModelName,
         result.tokens
     );
 
@@ -108,7 +123,7 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
         content_type: contentType,
         user_input: userInput,
         generated_content: result.content,
-        model_used: result.model,
+        model_used: finalModelName,
         tokens_used: result.tokens,
         created_at: new Date().toISOString(),
     };

@@ -16,6 +16,32 @@ const router = express.Router();
 // All content routes require authentication
 router.use(auth);
 
+// GET /api/content/model-status - Get current model RPD usage
+router.get('/model-status', async (req, res) => {
+    try {
+        const usages = db.prepare('SELECT model, count, last_reset FROM model_rpd_usage').all();
+        
+        const statusMap = {
+            'imagen-4.0-generate-001': 0,
+            'imagen-4.0-ultra-generate-001': 0,
+            'imagen-4.0-fast-generate-001': 0
+        };
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        usages.forEach(row => {
+            if (row.last_reset === today) {
+                statusMap[row.model] = row.count;
+            }
+        });
+        
+        res.json({ status: statusMap });
+    } catch (err) {
+        console.error('Model status error:', err);
+        res.status(500).json({ error: 'Model durumları yüklenirken hata oluştu.' });
+    }
+});
+
 // ── Validation ─────────────────────────────────────────────
 
 const generateSchema = Joi.object({
@@ -30,6 +56,7 @@ const generateSchema = Joi.object({
             'string.empty': 'Ne paylaşmak istediğinizi yazın.',
         }),
     aspect_ratio: Joi.string().valid('1:1', '9:16', '16:9').default('1:1'),
+    model: Joi.string().valid('imagen-4.0-generate-001', 'imagen-4.0-ultra-generate-001', 'imagen-4.0-fast-generate-001').optional(),
 });
 
 router.post('/generate', checkUsageLimit, async (req, res) => {
@@ -74,7 +101,8 @@ router.post('/generate', checkUsageLimit, async (req, res) => {
             value.profile_id,
             value.content_type,
             value.user_input,
-            value.aspect_ratio
+            value.aspect_ratio,
+            value.model
         );
 
         res.status(201).json({

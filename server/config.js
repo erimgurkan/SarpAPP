@@ -13,6 +13,7 @@ module.exports = {
     jwtExpiry: '30d',
 
     hfToken: process.env.HF_TOKEN,
+    geminiApiKey: process.env.GEMINI_API_KEY,
 
     openai: {
         apiKey: process.env.OPENAI_API_KEY,

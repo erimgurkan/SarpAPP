@@ -1,154 +1,184 @@
 /* ═══════════════════════════════════════════════════════════
-   PostMax — Image Service (Z-Image-Turbo Gradio API)
+   PostMax — Image Service (Google Gemini Imagen 4.0 API)
    ═══════════════════════════════════════════════════════════ */
 
 const config = require('../config');
+const { dbWrapper: db } = require('../db/database');
 
-// The Gradio App Endpoint
-const GRADIO_API_BASE = 'https://mrfakename-z-image-turbo.hf.space/gradio_api/call/generate_image_1';
+// Google Gemini Imagen 4.0 Models
+const IMAGEN_MODELS = [
+    'imagen-4.0-generate-001',
+    'imagen-4.0-ultra-generate-001',
+    'imagen-4.0-fast-generate-001'
+];
 
 /**
- * Generate an image using HuggingFace Z-Image-Turbo
+ * Get daily usage count for a model
+ */
+function getModelRpdCount(model) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const row = db.prepare('SELECT count, last_reset FROM model_rpd_usage WHERE model = ?').get(model);
+        if (row && row.last_reset === today) {
+            return row.count;
+        }
+        return 0;
+    } catch (e) {
+        console.error('Error fetching model RPD count:', e.message);
+        return 0;
+    }
+}
+
+/**
+ * Increment daily usage count for a model
+ */
+function incrementModelRpdCount(model) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        db.prepare(`
+            INSERT INTO model_rpd_usage (model, count, last_reset)
+            VALUES (?, 1, ?)
+            ON CONFLICT(model) DO UPDATE SET
+                count = CASE WHEN last_reset = ? THEN count + 1 ELSE 1 END,
+                last_reset = ?
+        `).run(model, today, today, today);
+    } catch (e) {
+        console.error('Error incrementing model RPD count:', e.message);
+    }
+}
+
+/**
+ * Set model RPD to limit (25) to trigger immediate failover
+ */
+function setModelLimitReached(model) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        db.prepare(`
+            INSERT INTO model_rpd_usage (model, count, last_reset)
+            VALUES (?, 25, ?)
+            ON CONFLICT(model) DO UPDATE SET count = 25, last_reset = ?
+        `).run(model, today, today);
+    } catch (e) {
+        console.error('Error setting model RPD limit:', e.message);
+    }
+}
+
+/**
+ * Generate an image using Google Gemini Imagen 4.0 REST API
+ * Auto failover/fallback chain when RPD (Requests Per Day) limit is reached.
+ * 
  * @param {string} prompt - The image prompt
  * @param {number} width - Output image width
  * @param {number} height - Output image height
- * @param {number} retries - Number of retries on failure
- * @returns {Promise<string>} - URL or base64 of the generated image
+ * @param {number} retries - Not used, kept for signature compatibility
+ * @param {string} modelOverride - Specific model to try first
+ * @returns {Promise<Object>} - { imageUrl, modelUsed } or null
  */
-async function generateImage(prompt, width = 1024, height = 1024, retries = 2) {
-    if (!config.hfToken) {
-        console.warn('⚠️ HF_TOKEN ayarlanmamış, resim üretilemeyecek.');
-        return null; // Return null if no token is configured
-    }
-
-    try {
-        // Step 1: Initialize the request and get EVENT_ID
-        const postRes = await fetch(GRADIO_API_BASE, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.hfToken}`
-            },
-            body: JSON.stringify({
-                data: [
-                    prompt,   // [0] Prompt
-                    height,   // [1] Height (Gradio expects height first)
-                    width,    // [2] Width (Gradio expects width second)
-                    9,        // [3] Inference steps
-                    42,       // [4] Seed (doesn't matter if randomize is true)
-                    true      // [5] Randomize seed
-                ]
-            })
-        });
-
-        if (!postRes.ok) {
-            throw new Error(`Gradio POST Error: ${postRes.status} ${postRes.statusText}`);
-        }
-
-        const postData = await postRes.json();
-        const eventId = postData.event_id;
-
-        if (!eventId) {
-            throw new Error('EVENT_ID alınamadı.');
-        }
-
-        // Step 2: Listen to the SSE stream to get the final image
-        const getRes = await fetch(`${GRADIO_API_BASE}/${eventId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${config.hfToken}`
-            }
-        });
-
-        if (!getRes.ok) {
-            throw new Error(`Gradio GET Error: ${getRes.status} ${getRes.statusText}`);
-        }
-
-        const textStream = await getRes.text();
-        const lines = textStream.split('\n');
-
-        let isComplete = false;
-        let resultData = null;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line.startsWith('event: complete')) {
-                isComplete = true;
-                // The next line should be the 'data: ' line
-                const dataLine = lines[i + 1];
-                if (dataLine && dataLine.startsWith('data: ')) {
-                    const jsonData = JSON.parse(dataLine.substring(6));
-                    resultData = jsonData;
-                }
-                break;
-            }
-            
-            if (line.startsWith('event: error')) {
-                throw new Error('Gradio API döndürdüğü hata akışı.');
-            }
-        }
-
-        if (isComplete && resultData && resultData.length > 0) {
-            // resultData[0] is typically the image object from Gradio which contains 'url' or 'path'
-            // Since Gradio spaces often return a dict with a URL to the generated image:
-            const imgData = resultData[0]; 
-            if (typeof imgData === 'string') {
-                return imgData; // Base64 or direct URL
-            } else if (imgData && imgData.url) {
-                return imgData.url;
-            } else if (imgData && imgData.path) {
-                // If it's a relative path, we prefix it with the space domain
-                return `https://mrfakename-z-image-turbo.hf.space/file=${imgData.path}`;
-            }
-        }
-
-        throw new Error('Görsel üretildi ancak veri anlaşılamadı.');
-
-    } catch (err) {
-        console.error(`Image Generation Error (kalan deneme: ${retries}):`, err);
-        if (retries > 0) {
-            console.log(`3 saniye sonra görsel üretimi yeniden denenecek...`);
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            // Trigger a ping request to make sure the space is warm
-            await pingSpace();
-            return generateImage(prompt, width, height, retries - 1);
-        }
+async function generateImage(prompt, width = 1024, height = 1024, retries = 2, modelOverride = null) {
+    if (!config.geminiApiKey || config.geminiApiKey === 'AIzaSyBURAYA_GEMINI_KEYINI_YAZ') {
+        console.warn('⚠️ GEMINI_API_KEY ayarlanmamış veya varsayılan değerde kalmış.');
         return null;
     }
-}
 
-/**
- * Keep-alive Hugging Face space function
- */
-function startKeepAlive() {
-    console.log("ℹ️ Hugging Face Space Keep-Alive başlatıldı.");
-    // Run immediately
-    pingSpace();
-    // Run every 5 minutes (300000 ms)
-    setInterval(pingSpace, 300000);
-}
+    // Determine the aspect ratio string Gemini Imagen expects: "1:1", "3:4", "4:3", "9:16", "16:9"
+    let aspectRatio = "1:1";
+    const ratio = width / height;
 
-async function pingSpace() {
-    try {
-        const res = await fetch("https://mrfakename-z-image-turbo.hf.space/", {
-            method: 'GET',
-            headers: {
-                'User-Agent': 'PostCraftKeepAlive/1.0'
-            }
-        });
-        if (res.ok) {
-            console.log(`✅ Hugging Face Space aktif. Status: ${res.status}`);
-        } else {
-            console.warn(`⚠️ Hugging Face Space durum kodu: ${res.status}`);
-        }
-    } catch (err) {
-        console.error("❌ Hugging Face Space ping hatası:", err.message);
+    if (Math.abs(ratio - 9/16) < 0.1) {
+        aspectRatio = "9:16";
+    } else if (Math.abs(ratio - 16/9) < 0.1) {
+        aspectRatio = "16:9";
     }
+
+    // Set up failover chain. If modelOverride is passed, try it first.
+    let modelsToTry = [...IMAGEN_MODELS];
+    if (modelOverride && IMAGEN_MODELS.includes(modelOverride)) {
+        modelsToTry = modelsToTry.filter(m => m !== modelOverride);
+        modelsToTry.unshift(modelOverride);
+    }
+
+    // Fail-fast logic: filter out models that have hit their RPD quota of 25.
+    let modelsWithQuota = modelsToTry.filter(model => getModelRpdCount(model) < 25);
+    
+    // If all models are exhausted, try them all anyway as a final fallback.
+    if (modelsWithQuota.length === 0) {
+        console.log('⚠️ Tüm modellerin günlük limitleri dolmuş görünüyor. Yine de deneme yapılıyor...');
+        modelsWithQuota = modelsToTry;
+    }
+
+    for (const model of modelsWithQuota) {
+        try {
+            console.log(`🤖 Google Gemini API ile görsel üretiliyor. Model: ${model}, Oran: ${aspectRatio}`);
+            
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${config.geminiApiKey}`;
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    instances: [
+                        {
+                            prompt: prompt
+                        }
+                    ],
+                    parameters: {
+                        sampleCount: 1,
+                        aspectRatio: aspectRatio,
+                        imageFormat: "image/jpeg"
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errMsg = errorData.error?.message || response.statusText;
+                console.warn(`⚠️ Model ${model} hata verdi: ${response.status} - ${errMsg}`);
+                
+                // If it is a quota / limit / 429 / 503 error, mark it as limit-reached in DB and failover
+                if (response.status === 429 || response.status === 503 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('limit')) {
+                    console.log(`🔄 Quota doldu veya RPD limiti aşıldı. Bu model limit-dışı işaretleniyor ve diğerine geçiliyor...`);
+                    setModelLimitReached(model);
+                    continue; 
+                }
+                
+                throw new Error(`Gemini API: ${errMsg}`);
+            }
+
+            const data = await response.json();
+            
+            // Extract the base64 encoded bytes from predictions
+            if (data.predictions && data.predictions.length > 0 && data.predictions[0].bytesBase64Encoded) {
+                const base64Data = data.predictions[0].bytesBase64Encoded;
+                const mimeType = data.predictions[0].mimeType || 'image/jpeg';
+                console.log(`✅ Görsel başarıyla üretildi! Model: ${model}`);
+                
+                // Increment RPD count in DB
+                incrementModelRpdCount(model);
+                
+                return {
+                    imageUrl: `data:${mimeType};base64,${base64Data}`,
+                    modelUsed: model
+                };
+            }
+
+            throw new Error('Görsel verisi predictions içinde bulunamadı.');
+
+        } catch (err) {
+            console.error(`❌ Model ${model} ile görsel üretimi başarısız:`, err.message);
+            // Loop continues to next model...
+        }
+    }
+
+    console.error('❌ Tüm Imagen modelleri başarısız oldu (Tüm RPD limitleri aşılmış olabilir).');
+    return null;
 }
 
-// Start keep alive automatically on load
-startKeepAlive();
+// Dummy ping function for backward compatibility
+async function pingSpace() {
+    return true;
+}
 
 module.exports = {
     generateImage,

@@ -307,6 +307,9 @@ async function loadHistory() {
             cachedHistory = data.contents;
             renderGrids();
         }
+        
+        // Refresh model RPD status indicators
+        await updateModelStatus();
     } catch (err) {
         console.error("Geçmiş yükleme hatası:", err);
     }
@@ -591,7 +594,7 @@ function initGridModal() {
             const sector = document.getElementById('formSector').value || 'Genel';
             const prompt = document.getElementById('formPrompt').value;
             const ratio = document.getElementById('formRatio').value;
-            const model = document.getElementById('formModel').value;
+            const model = null;
             const resolution = document.getElementById('formResolution').value;
             const hdQuality = document.getElementById('toggleHD').checked;
             const enhancedPrompt = document.getElementById('toggleEnhanced').checked;
@@ -613,9 +616,12 @@ function initGridModal() {
             const loadingCardId = 'loading-card-' + Date.now();
             const loadingCardHtml = `
                 <div class="grid-card-loading" id="${loadingCardId}">
-                    <div class="loading-spinner"></div>
-                    <b>Yapay Zeka Hazırlıyor...</b>
-                    <span>Görsel çiziliyor ve metin kurgulanıyor.</span>
+                    <div class="loading-shimmer-box"></div>
+                    <div class="loading-info-box">
+                        <div class="loading-bar"></div>
+                        <div class="loading-bar short"></div>
+                        <span style="font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent); margin-top: 4px; display: block; font-weight: bold; animation: pulse 1s infinite alternate;">🤖 YAPAY ZEKA ÇİZİYOR...</span>
+                    </div>
                 </div>
             `;
             if (imageGrid) {
@@ -661,6 +667,9 @@ function initGridModal() {
                 // Open detail drawer for new item
                 openDetailDrawer(data.content);
 
+                // Refresh model status immediately
+                await updateModelStatus();
+
             } catch (err) {
                 const loadingCard = document.getElementById(loadingCardId);
                 if (loadingCard) loadingCard.remove();
@@ -680,5 +689,55 @@ function initGridModal() {
                 document.getElementById('formPrompt').value = '';
             }
         });
+    }
+}
+
+async function updateModelStatus() {
+    if (!currentToken) return;
+    try {
+        const res = await fetch(`${API_URL}/content/model-status`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`
+            }
+        });
+        const data = await res.json();
+        if (res.ok && data.status) {
+            const status = data.status;
+            
+            const models = [
+                { id: 'generate', name: 'imagen-4.0-generate-001' },
+                { id: 'ultra', name: 'imagen-4.0-ultra-generate-001' },
+                { id: 'fast', name: 'imagen-4.0-fast-generate-001' }
+            ];
+            
+            let foundActive = false;
+            
+            models.forEach(m => {
+                const count = status[m.name] || 0;
+                const progressPct = Math.min((count / 25) * 100, 100);
+                
+                const rpdEl = document.getElementById(`rpd-${m.id}`);
+                const progressEl = document.getElementById(`progress-${m.id}`);
+                const dotEl = document.getElementById(`dot-${m.id}`);
+                
+                if (rpdEl) rpdEl.innerText = `${count}/25 RPD`;
+                if (progressEl) progressEl.style.width = `${progressPct}%`;
+                
+                if (dotEl) {
+                    dotEl.className = 'model-status-dot';
+                    if (count >= 25) {
+                        dotEl.classList.add('exhausted');
+                    } else if (!foundActive) {
+                        dotEl.classList.add('active');
+                        foundActive = true;
+                    } else {
+                        dotEl.classList.add('waiting');
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.error("Model durum güncelleme hatası:", err);
     }
 }

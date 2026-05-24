@@ -87,6 +87,14 @@ async function initDatabase() {
         )
     `);
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS model_rpd_usage (
+            model TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            last_reset TEXT DEFAULT (date('now'))
+        )
+    `);
+
     // Create indexes
     db.run('CREATE INDEX IF NOT EXISTS idx_profiles_user ON brand_profiles(user_id)');
     db.run('CREATE INDEX IF NOT EXISTS idx_content_user ON generated_content(user_id)');
