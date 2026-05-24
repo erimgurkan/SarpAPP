@@ -1,83 +1,82 @@
 /* ═══════════════════════════════════════════════════════════
-   PostCraft — OpenAI Service
-   GPT-4o / GPT-4o-mini API communication
+   PostCraft — Google Gemini Text Service
+   Gemini 2.5 Flash API communication
    ═══════════════════════════════════════════════════════════ */
 
-const OpenAI = require('openai');
 const config = require('../config');
 
-let client = null;
-
 /**
- * OpenAI client'ı lazy-initialize et
- */
-function getClient() {
-    if (!client) {
-        if (!config.openai.apiKey || config.openai.apiKey === 'sk-BURAYA_API_KEYINI_YAZ') {
-            throw new Error(
-                'OpenAI API key ayarlanmamış. ' +
-                '.env dosyasında OPENAI_API_KEY değerini gerçek API key\'iniz ile değiştirin. ' +
-                'Key almak için: https://platform.openai.com/api-keys'
-            );
-        }
-        client = new OpenAI({ apiKey: config.openai.apiKey });
-    }
-    return client;
-}
-
-/**
- * OpenAI API ile içerik üret
+ * Gemini API ile içerik üret
  * @param {string} prompt - Tam prompt metni
  * @returns {Object} { content, model, tokens }
  */
 async function generateContent(prompt) {
-    const openai = getClient();
+    if (!config.geminiApiKey || config.geminiApiKey === 'AIzaSyBURAYA_GEMINI_KEYINI_YAZ') {
+        throw new Error(
+            'Google Gemini API key ayarlanmamış. ' +
+            '.env dosyasında GEMINI_API_KEY değerini gerçek API key\'iniz ile değiştirin.'
+        );
+    }
 
     try {
-        const response = await openai.chat.completions.create({
-            model: config.openai.model,
-            messages: [
-                {
-                    role: 'system',
-                    content: 'Sen, Türkiye\'deki küçük işletmeler için Instagram içerikleri üreten profesyonel bir içerik uzmanısın. Verilen direktiflere harfiyen uyarsın. Çıktıların her zaman kullanıma hazır, doğal ve profesyonel olur.'
-                },
-                {
-                    role: 'user',
-                    content: prompt
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiApiKey}`;
+        
+        console.log("🤖 Google Gemini API (gemini-2.5-flash) ile metin üretiliyor...");
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            {
+                                text: "Sen, Türkiye'deki küçük işletmeler için Instagram içerikleri üreten profesyonel bir içerik uzmanısın. Verilen direktiflere harfiyen uyarsın. Çıktıların her zaman kullanıma hazır, doğal ve profesyonel olur. Sadece istenen sosyal medya gönderisini ve başlığı/yazıyı üret."
+                            },
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2500
                 }
-            ],
-            temperature: 0.7,
-            max_tokens: 2500,
-            presence_penalty: 0.1,
-            frequency_penalty: 0.1,
+            })
         });
 
-        const choice = response.choices[0];
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errMsg = errorData.error?.message || response.statusText;
+            throw new Error(`Gemini API Hatası: ${errMsg}`);
+        }
 
-        return {
-            content: choice.message.content,
-            model: response.model,
-            tokens: response.usage?.total_tokens || 0,
-            promptTokens: response.usage?.prompt_tokens || 0,
-            completionTokens: response.usage?.completion_tokens || 0,
-            finishReason: choice.finish_reason,
-        };
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content?.parts?.[0]?.text) {
+            const generatedText = data.candidates[0].content.parts[0].text;
+            const promptTokens = data.usageMetadata?.promptTokenCount || 0;
+            const completionTokens = data.usageMetadata?.candidatesTokenCount || 0;
+            const totalTokens = data.usageMetadata?.totalTokenCount || 0;
+            
+            console.log(`✅ Metin başarıyla üretildi! Model: gemini-2.5-flash`);
+            
+            return {
+                content: generatedText,
+                model: 'gemini-2.5-flash',
+                tokens: totalTokens,
+                promptTokens: promptTokens,
+                completionTokens: completionTokens,
+                finishReason: data.candidates[0].finishReason || 'STOP'
+            };
+        }
+
+        throw new Error('İçerik verisi candidates içinde bulunamadı.');
     } catch (error) {
-        // Specific error handling
-        if (error.status === 401) {
-            throw new Error('OpenAI API key geçersiz. Lütfen .env dosyasındaki OPENAI_API_KEY değerini kontrol edin.');
-        }
-        if (error.status === 429) {
-            throw new Error('OpenAI API rate limit aşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.');
-        }
-        if (error.status === 500 || error.status === 503) {
-            throw new Error('OpenAI servisi şu an yanıt vermiyor. Lütfen birkaç dakika sonra tekrar deneyin.');
-        }
-        if (error.code === 'insufficient_quota') {
-            throw new Error('OpenAI hesabınızda yeterli kredi yok. Lütfen hesabınıza bakiye yükleyin: https://platform.openai.com/account/billing');
-        }
-
-        console.error('OpenAI API error:', error.message);
+        console.error('Gemini generateContent error:', error.message);
         throw new Error(`AI servisi hatası: ${error.message}`);
     }
 }
@@ -86,9 +85,8 @@ async function generateContent(prompt) {
  * API key'in ayarlanıp ayarlanmadığını kontrol et
  */
 function isConfigured() {
-    return config.openai.apiKey &&
-           config.openai.apiKey !== 'sk-BURAYA_API_KEYINI_YAZ' &&
-           config.openai.apiKey.startsWith('sk-');
+    return config.geminiApiKey &&
+           config.geminiApiKey !== 'AIzaSyBURAYA_GEMINI_KEYINI_YAZ';
 }
 
 module.exports = { generateContent, isConfigured };
