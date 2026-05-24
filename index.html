@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEMEN OLUSTUR — PostCraft</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- ANTHROPIC-STYLE LANDING VIEW -->
+        <div id="landingView" class="landing-view">
+            <nav class="landing-nav">
+                <div class="landing-logo">POSTCRAFT</div>
+                <div class="landing-nav-right">
+                    <a href="#" class="landing-link active" id="navHome">Ana Sayfa</a>
+                    <a href="#" class="landing-link" id="navPricing">Fiyatlandırma</a>
+                    <button class="btn-try-claude" id="btnLandingLogin">Giriş Yap</button>
+                </div>
+            </nav>
+            <div class="landing-body" id="landingBody">
+                <div class="landing-left">
+                    <h1 class="landing-headline">
+                        Sosyal medya <span class="underline-black">gücünüzü</span><br>
+                        zirveye taşıyan<br>
+                        içerik <span class="underline-black">motoru</span>.
+                    </h1>
+                </div>
+                <div class="landing-right">
+                    <p class="landing-paragraph">
+                        PostCraft, işletmeniz için Instagram algoritmalarına tam uyumlu, 
+                        marka kimliğinizi yansıtan yüksek kaliteli içerikler üretir.
+                        Klasik şablonların ötesine geçin.
+                    </p>
+                </div>
+            </div>
+
+            <!-- PRICING VIEW CONTENT (Lives inside landingView structure) -->
+            <div class="pricing-body" id="pricingBody" style="display: none;">
+                <div class="pricing-header-wrap">
+                    <h2 class="pricing-main-title">Fiyatlandırma Paketleri</h2>
+                </div>
+                
+                <div class="pricing-cards-container">
+                    
+                    <!-- Card 1 -->
+                    <div class="pricing-card">
+                        <div class="pc-top">
+                            <h3 class="pc-title">Başlangıç 1.0</h3>
+                            <p class="pc-desc">İşletmesini dijitale yeni taşıyanlar için temel seviye içerik motoru, kısıtlı özelliklerle.</p>
+                            <a href="#" class="pc-link">Detayları gör →</a>
+                        </div>
+                        
+                        <div class="pc-bottom">
+                            <div class="pc-row">
+                                <span class="pc-label">KOTA</span>
+                                <span class="pc-value">Ayda 5 İçerik</span>
+                            </div>
+                            <div class="pc-row">
+                                <span class="pc-label">PROFİL</span>
+                                <span class="pc-value">1 Marka Kimliği</span>
+                            </div>
+                            <button class="btn-pc-action">Ücretsiz Başla →</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="pricing-card">
+                        <div class="pc-top">
+                            <h3 class="pc-title">Profesyonel 2.0</h3>
+                            <p class="pc-desc">Reklamsız. Sınırsız üretim. Tamamen işletmenizin sesine uygun, profesyonel içerikler.</p>
+                            <a href="#" class="pc-link">Detayları gör →</a>
+                        </div>
+                        
+                        <div class="pc-bottom">
+                            <div class="pc-row">
+                                <span class="pc-label">KOTA</span>
+                                <span class="pc-value">Sınırsız</span>
+                            </div>
+                            <div class="pc-row">
+                                <span class="pc-label">PROFİL</span>
+                                <span class="pc-value">3 Marka Kimliği</span>
+                            </div>
+                            <button class="btn-pc-action">Hemen Seç →</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="pricing-card">
+                        <div class="pc-top">
+                            <h3 class="pc-title">Ajans 3.0</h3>
+                            <p class="pc-desc">Birden fazla marka yöneten ajanslar için. Limitsiz profil ve özel şablon ekleme yeteneği.</p>
+                            <a href="#" class="pc-link">Detayları gör →</a>
+                        </div>
+                        
+                        <div class="pc-bottom">
+                            <div class="pc-row">
+                                <span class="pc-label">KOTA</span>
+                                <span class="pc-value">Limitsiz API</span>
+                            </div>
+                            <div class="pc-row">
+                                <span class="pc-label">PROFİL</span>
+                                <span class="pc-value">Sınırsız</span>
+                            </div>
+                            <button class="btn-pc-action">İletişime Geç →</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTH VIEW (MODAL-LIKE) -->
+        <div id="authView" class="auth-view">
+            <h1 class="auth-logo">POSTCRAFT</h1>
+            <div class="auth-box">
+                <h2 class="auth-title" id="authTitle">GİRİŞ YAP</h2>
+                <div id="authError" class="auth-error"></div>
+                <div class="form-group">
+                    <label class="form-label" for="authEmail">E-POSTA</label>
+                    <input type="email" class="form-control auth-input" id="authEmail" placeholder="ornek@sirket.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="authPassword">ŞİFRE</label>
+                    <input type="password" class="form-control auth-input" id="authPassword" placeholder="••••••••">
+                </div>
+                <button class="btn-generate" id="btnAuthSubmit">GİRİŞ YAP</button>
+                <button class="btn-toggle-auth" id="btnAuthToggle">Hesabın yok mu? KAYIT OL</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW (GRID) -->
+        <div id="dashboardView" class="dashboard-view" style="display: none;">
+            
+            <!-- HEADER -->
+            <div class="top-header">
+                <span class="header-text">HEMEN OLUSTUR</span>
+                <button class="btn-logout" id="btnLogout">ÇIKIŞ</button>
+            </div>
+
+            <!-- THE GRID -->
+            <div class="grid-container" id="gridContainer">
+            
+            <div class="grid-cell" data-type="carousel">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1528696892704-5e1122852276?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">INSTAGRAM CAROUSEL</div>
+            </div>
+
+            <div class="grid-cell" data-type="duyuru">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">POSTER</div>
+            </div>
+
+            <div class="grid-cell" data-type="story">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1516280440503-66f83b6329c4?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">REELS</div>
+            </div>
+
+            <div class="grid-cell" data-type="tek-kare">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">VSVS</div>
+            </div>
+
+            <div class="grid-cell" data-type="caption">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">METIN / KOPYA</div>
+            </div>
+
+            <div class="grid-cell" data-type="kampanya">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">KAMPANYA</div>
+            </div>
+
+            <div class="grid-cell" data-type="blog">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4b0?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">MINI BLOG</div>
+            </div>
+
+            <div class="grid-cell" data-type="hakkimizda">
+                <div class="cell-image" style="background-image: url('https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=200&auto=format&fit=crop');"></div>
+                <div class="cell-badge">BIZ KİMIZ?</div>
+            </div>
+
+        </div>
+
+        <!-- MODAL OVERLAY -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal-content">
+                <button class="modal-close" id="modalClose">×</button>
+                <h2 class="form-title" id="modalTitle">ICERIK OLUSTUR</h2>
+                
+                <div class="form-group">
+                    <label class="form-label" for="formSector">SEKTORUNUZ</label>
+                    <input type="text" class="form-control" id="formSector" placeholder="Örn: Kafe, Kuaför, Eczane...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="formPrompt">NE PAYLASMAK ISTIYORSUN?</label>
+                    <textarea class="form-control" id="formPrompt" placeholder="Kısa bir cümle yaz..."></textarea>
+                </div>
+
+                <button class="btn-generate" id="btnGenerate">OLUSTUR</button>
+
+                <div class="output-box" id="outputBox"></div>
+            </div>
+        </div>
+
+        </div> <!-- end dashboardView -->
+
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

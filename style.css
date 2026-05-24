@@ -1,0 +1,575 @@
+/* ═══════════════════════════════════════════════════════════
+   PostCraft — Brutalist Minimalist Grid
+   "Bam Güm" Tasarım Sistemi
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap');
+
+:root {
+    --bg-main: #F4F3ED; /* Anthropic cream/beige */
+    --text-black: #1C1C1C;
+    --border-color: #E5E5E5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1A1A1A; /* Dark outer edge if screen is wider than 1400px */
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* Remove padding to make it truly full screen */
+    overflow: hidden;
+}
+
+/* ── Main Container ───────────────────────────────────────── */
+.app-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-main);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Landing View (Anthropic Style) ───────────────────────── */
+.landing-view {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.landing-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 48px;
+}
+
+.landing-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    color: var(--text-black);
+}
+
+.landing-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.landing-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-black);
+    text-decoration: none;
+}
+
+.btn-try-claude {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-try-claude:hover {
+    opacity: 0.8;
+}
+
+.landing-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 48px;
+}
+
+.landing-left {
+    flex: 1.2;
+}
+
+.landing-headline {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text-black);
+}
+
+.underline-black {
+    text-decoration: underline;
+    text-decoration-thickness: 4px;
+    text-underline-offset: 6px;
+}
+
+.landing-right {
+    flex: 0.8;
+    padding-left: 60px;
+}
+
+.landing-paragraph {
+    font-family: 'Georgia', serif;
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    line-height: 1.5;
+    color: #333333;
+    max-width: 450px;
+}
+
+/* ── Pricing View ─────────────────────────────────────────── */
+.pricing-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 48px;
+    margin-top: 20px;
+    height: calc(100% - 100px); /* accounting for navbar */
+    overflow-y: auto; /* Just in case it overflows on small screens */
+}
+
+.pricing-header-wrap {
+    margin-bottom: 24px;
+}
+
+.pricing-main-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-black);
+}
+
+.pricing-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+    align-items: start; /* Prevents cards from stretching to equal max height if not desired, though keeping them equal height is often good. But to prevent stretching to the whole page, we removed flex:1 */
+}
+
+.pricing-card {
+    background-color: #EBE5D9;
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.pc-top {
+    margin-bottom: 40px;
+}
+
+.pc-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-black);
+}
+
+.pc-desc {
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.pc-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-black);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.pc-link:hover {
+    text-decoration: underline;
+}
+
+.pc-bottom {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+}
+
+.pc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid #D6D0C4;
+}
+
+.pc-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.pc-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-black);
+}
+
+.btn-pc-action {
+    background-color: #1A1A1A;
+    color: #FFF;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 16px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 200px;
+    transition: opacity 0.2s ease;
+}
+
+.btn-pc-action:hover {
+    opacity: 0.8;
+}
+
+/* Navbar active state */
+.landing-link.active {
+    font-weight: 700;
+    border-bottom: 2px solid var(--text-black);
+    padding-bottom: 2px;
+}
+
+/* View Transition Animation */
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Auth View (Modal Overlay) ────────────────────────────── */
+.auth-view {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(26, 26, 26, 0.4);
+    backdrop-filter: blur(4px);
+    display: none; /* hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.auth-logo {
+    display: none; /* Hide logo in modal since it's already in navbar */
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 400px;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.auth-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.auth-input {
+    font-family: 'Inter', sans-serif;
+    background: #F9F9F9;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+}
+
+.btn-toggle-auth {
+    font-family: 'Inter', sans-serif;
+    background: none;
+    border: none;
+    width: 100%;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #666;
+}
+
+.btn-toggle-auth:hover {
+    color: #000;
+}
+
+.auth-error {
+    font-family: 'Inter', sans-serif;
+    color: red;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+    display: none;
+}
+
+/* ── Dashboard View ───────────────────────────────────────── */
+.dashboard-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.btn-logout {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: 2px solid #E0E0E0;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-logout:hover {
+    background: #000;
+    color: #FFF;
+    border-color: #000;
+}
+
+/* ── Grid Layout ──────────────────────────────────────────── */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    height: 100%;
+    width: 100%;
+}
+
+.grid-cell {
+    border-right: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Remove right borders for last column */
+.grid-cell:nth-child(4n) {
+    border-right: none;
+}
+
+/* Remove bottom borders for last row */
+.grid-cell:nth-child(n+5) {
+    border-bottom: none;
+}
+
+.grid-cell:hover {
+    background-color: #F0F0F0;
+}
+
+/* ── Cell Content ─────────────────────────────────────────── */
+.cell-image {
+    width: 140px;
+    height: 140px;
+    background-color: #E0E0E0;
+    /* Placeholder shadow to mimic the records in the reference */
+    box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -2px -2px 8px rgba(255,255,255,0.8);
+    margin-bottom: 32px;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.2s ease;
+}
+
+.grid-cell:hover .cell-image {
+    transform: scale(1.05);
+}
+
+.cell-badge {
+    background-color: #FFFFFF;
+    color: var(--text-black);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* ── Modal Overlay (For the Form) ─────────────────────────── */
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--bg-light);
+    width: 90%;
+    max-width: 600px;
+    border-radius: 12px;
+    padding: 40px;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-black);
+}
+
+/* ── Modal Form ───────────────────────────────────────────── */
+.form-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    background: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--text-black);
+}
+
+textarea.form-control {
+    resize: none;
+    height: 120px;
+}
+
+.btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: var(--text-black);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-generate:hover {
+    opacity: 0.8;
+}
+
+.output-box {
+    margin-top: 24px;
+    padding: 16px;
+    background: #E0E0E0;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    display: none;
+    white-space: pre-wrap;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+    }
+    .grid-cell:nth-child(2n) { border-right: none; }
+    .grid-cell:nth-child(4n) { border-right: none; }
+    .grid-cell:nth-child(n+7) { border-bottom: none; }
+}
+
+@media (max-width: 600px) {
+    body { padding: 0; }
+    .app-container { border-radius: 0; height: 100vh; }
+    .grid-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(8, 1fr);
+    }
+    .grid-cell { border-right: none; border-bottom: 2px solid var(--border-color); }
+    .grid-cell:last-child { border-bottom: none; }
+}

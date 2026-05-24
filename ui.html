@@ -1,0 +1,204 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+.w{background:#0A0A0A;color:#fff;font-family:'IBM Plex Sans',sans-serif;border-radius:8px;overflow:hidden;border:1px solid #222;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.cond{font-family:'Barlow Condensed',sans-serif;}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid #222;}
+.logo{display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:0.02em;}
+.logo-sq{width:8px;height:8px;background:#22C55E;}
+.nav-links{display:flex;gap:24px;font-size:13px;color:#666;}
+.nav-links span{cursor:pointer;}
+.nav-links span:hover{color:#fff;}
+.btn-green{background:#22C55E;color:#000;border:none;padding:8px 18px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:0;}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:320px;}
+.hero-l{padding:44px 28px;border-right:1px solid #222;display:flex;flex-direction:column;justify-content:center;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#22C55E;letter-spacing:0.15em;margin-bottom:20px;}
+.hero-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:52px;line-height:1.0;color:#fff;text-transform:uppercase;margin-bottom:16px;}
+.hero-sub{font-size:13px;color:#666;line-height:1.7;margin-bottom:28px;max-width:320px;}
+.btn-row{display:flex;align-items:center;gap:12px;}
+.btn-outline{background:transparent;border:1px solid #333;color:#fff;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;border-radius:0;font-family:'IBM Plex Sans',sans-serif;}
+.btn-fill{background:#22C55E;color:#000;border:none;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;border-radius:0;font-family:'IBM Plex Sans',sans-serif;}
+.hero-stat{margin-top:32px;padding-top:20px;border-top:1px solid #1a1a1a;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#333;}
+.hero-r{background:#0D0D0D;position:relative;display:flex;align-items:center;justify-content:center;padding:28px;}
+.dot-grid{position:absolute;inset:0;background-image:radial-gradient(circle,#1a1a1a 1px,transparent 1px);background-size:20px 20px;}
+.mockup{background:#111;border:1px solid #22C55E;padding:16px;width:240px;position:relative;z-index:1;}
+.mockup-bar{display:flex;align-items:center;gap:5px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #1a1a1a;}
+.m-dot{width:5px;height:5px;border-radius:50%;}
+.mockup-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#444;margin-left:4px;}
+.m-field{border:1px solid #222;padding:8px 10px;margin-bottom:6px;font-size:11px;color:#888;background:#0A0A0A;}
+.m-field span{color:#ccc;}
+.m-btn{width:100%;background:#22C55E;color:#000;border:none;padding:9px;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:'IBM Plex Sans',sans-serif;}
+.m-output{background:#0A0A0A;border:1px solid #1a1a1a;border-left:2px solid #22C55E;padding:10px;}
+.m-out-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#22C55E;margin-bottom:6px;letter-spacing:0.1em;}
+.m-out-text{font-size:10px;color:#888;line-height:1.5;}
+.m-tags{margin-top:6px;font-size:10px;color:#22C55E;font-family:'IBM Plex Mono',monospace;}
+
+/* STEPS */
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#22C55E;letter-spacing:0.15em;padding:32px 28px 0;}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800;text-transform:uppercase;color:#fff;padding:8px 28px 0;}
+.steps{border-top:1px solid #222;margin-top:20px;}
+.step{display:grid;grid-template-columns:72px 1fr;border-bottom:1px solid #222;}
+.step:last-child{border-bottom:none;}
+.step-num{padding:24px 20px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#222;border-right:1px solid #222;display:flex;align-items:flex-start;padding-top:28px;}
+.step-body{padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start;}
+.step-text{}
+.step-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;color:#fff;margin-bottom:6px;letter-spacing:0.03em;}
+.step-d{font-size:13px;color:#555;line-height:1.6;max-width:340px;}
+.arrow{color:#22C55E;font-size:18px;flex-shrink:0;margin-top:2px;}
+
+/* PRICING */
+.pricing{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #222;margin-top:28px;}
+.plan{padding:28px;border-right:1px solid #222;}
+.plan:last-child{border-right:none;}
+.plan.hot{border-left:2px solid #22C55E;}
+.plan-name{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:14px;}
+.plan.hot .plan-name{color:#22C55E;}
+.plan-price{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;color:#fff;line-height:1;}
+.plan-price small{font-size:14px;color:#444;font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
+.pdiv{height:1px;background:#1a1a1a;margin:18px 0;}
+.feat{font-size:12px;color:#666;padding:7px 0;border-bottom:1px solid #111;display:flex;align-items:center;gap:8px;}
+.feat.on{color:#999;}
+.feat.on::before{content:'—';color:#22C55E;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.feat.off::before{content:'—';color:#222;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.pbtn{width:100%;margin-top:18px;padding:11px;border-radius:0;font-size:13px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;letter-spacing:0.02em;}
+.pbtn.out{background:transparent;border:1px solid #2a2a2a;color:#555;}
+.pbtn.fill{background:#22C55E;border:none;color:#000;}
+
+/* FOOTER */
+.footer-cta{display:flex;align-items:center;justify-content:space-between;padding:28px;border-top:1px solid #222;background:#111;}
+.fcta-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;color:#fff;}
+.footer{padding:24px 28px 20px;border-top:1px solid #222;display:flex;justify-content:space-between;align-items:center;}
+.footer-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:#fff;display:flex;align-items:center;gap:6px;}
+.footer-links{display:flex;gap:20px;font-size:12px;color:#444;}
+.copy{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#333;}
+</style>
+
+<div class="w">
+  <div class="nav">
+    <div class="logo"><div class="logo-sq"></div>POSTCRAFT</div>
+    <div class="nav-links">
+      <span>Nasıl Çalışır</span><span>İçerik Türleri</span><span>Demo</span><span>Fiyatlandırma</span>
+    </div>
+    <button class="btn-green">ÜCRETSİZ DENE</button>
+  </div>
+
+  <div class="hero">
+    <div class="hero-l">
+      <div class="eyebrow">// TÜRK KOBİ'LER İÇİN</div>
+      <div class="hero-title">3 CÜMLE YAZ.<br>INSTAGRAM<br>POSTU HAZIR.</div>
+      <div class="hero-sub">Fotoğraf aramaya, metin düşünmeye son. Prompt mühendisliği arkada çalışır — sen sadece ne söylemek istediğini bilirsin.</div>
+      <div class="btn-row">
+        <button class="btn-fill">HEMEN BAŞLA</button>
+        <button class="btn-outline">NASIL ÇALIŞIR?</button>
+      </div>
+      <div class="hero-stat">1.000'DEN FAZLA TÜRK İŞLETMESİ KULLANIYOR</div>
+    </div>
+    <div class="hero-r">
+      <div class="dot-grid"></div>
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="m-dot" style="background:#1a1a1a"></div>
+          <div class="m-dot" style="background:#1a1a1a"></div>
+          <div class="m-dot" style="background:#22C55E"></div>
+          <span class="mockup-label">postcraft.app/demo</span>
+        </div>
+        <div class="m-field">SEKTÖR: <span>Kafe & Restoran</span></div>
+        <div class="m-field">İÇERİK: <span>Duyuru Postu</span></div>
+        <div class="m-field">TON: <span>Samimi</span></div>
+        <button class="m-btn">✦ İÇERİK OLUŞTUR</button>
+        <div class="m-output">
+          <div class="m-out-label">OUTPUT →</div>
+          <div class="m-out-text">Bu hafta cold brew serimiz menüde! Kadıköy şubemizde sizi bekliyoruz.</div>
+          <div class="m-tags">#kahve #kadıköy #coldbrew</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">// İŞLEYİŞ</div>
+  <div class="sec-title">SİSTEMİN ARKASINDAKİ GÜÇ</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-text">
+          <div class="step-t">Marka Profilini Kaydet</div>
+          <div class="step-d">Sektörünü, tonunu, hedef kitlenizi bir kez tanımla. Sistem tüm içerikleri bu kimliğe göre üretir.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-text">
+          <div class="step-t">İçeriğini Anlat</div>
+          <div class="step-d">Birkaç cümle yaz. "Hafta sonu kahvelerde %25 indirim var" de, gerisini motora bırak.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-text">
+          <div class="step-t">Yayına Hazır Sonuç</div>
+          <div class="step-d">Caption, hashtag, yapı — hepsi hazır. Kopyala, Instagram'a yapıştır.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label" style="padding-top:32px;">// FİYATLANDIRMA</div>
+  <div class="sec-title">ŞEFFAF FİYATLANDIRMA</div>
+  <div class="pricing">
+    <div class="plan">
+      <div class="plan-name">Başlangıç</div>
+      <div class="plan-price">₺0 <small>/ay</small></div>
+      <div class="pdiv"></div>
+      <div class="feat on">Ayda 5 içerik</div>
+      <div class="feat on">1 işletme profili</div>
+      <div class="feat off">Marka sesi kaydetme</div>
+      <div class="feat off">Öncelikli destek</div>
+      <button class="pbtn out">ÜCRETSİZ BAŞLA</button>
+    </div>
+    <div class="plan hot">
+      <div class="plan-name">Profesyonel</div>
+      <div class="plan-price">₺199 <small>/ay</small></div>
+      <div class="pdiv"></div>
+      <div class="feat on">Sınırsız içerik</div>
+      <div class="feat on">3 işletme profili</div>
+      <div class="feat on">Marka sesi kaydetme</div>
+      <div class="feat on">Öncelikli destek</div>
+      <button class="pbtn fill">HEMEN SEÇ</button>
+    </div>
+    <div class="plan">
+      <div class="plan-name">İşletme</div>
+      <div class="plan-price">₺399 <small>/ay</small></div>
+      <div class="pdiv"></div>
+      <div class="feat on">Her şey Pro'da olan</div>
+      <div class="feat on">Sınırsız profil</div>
+      <div class="feat on">API erişimi</div>
+      <div class="feat on">Birebir danışmanlık</div>
+      <button class="pbtn out">BİZE ULAŞIN</button>
+    </div>
+  </div>
+
+  <div class="footer-cta">
+    <div class="fcta-title">İÇERİK ÜRETMEYE BUGÜN BAŞLA</div>
+    <button class="btn-fill" style="padding:12px 28px;font-size:14px;">ÜCRETSİZ DENE →</button>
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo"><div class="logo-sq"></div>POSTCRAFT</div>
+    <div class="footer-links"><span>Nasıl Çalışır</span><span>Fiyatlandırma</span><span>Demo</span><span>İletişim</span></div>
+    <div class="copy">© 2026 POSTCRAFT</div>
+  </div>
+</div>
