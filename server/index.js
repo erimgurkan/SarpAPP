@@ -77,8 +77,8 @@ app.use((err, req, res, next) => {
 ║                                                  ║
 ║  🚀 Server:     http://localhost:${String(config.port).padEnd(5)}          ║
 ║  📊 Database:   SQLite (bağlı)                   ║
-║  🤖 AI Model:   ${config.openai.model.padEnd(30)} ║
-║  🔑 OpenAI:     ${aiStatus.padEnd(30)} ║
+║  🤖 AI Model:   gemini-2.5-flash & Imagen 4.0    ║
+║  🔑 Gemini API: ${aiStatus.padEnd(30)} ║
 ║                                                  ║
 ╠══════════════════════════════════════════════════╣
 ║  API Endpoints:                                  ║
@@ -95,9 +95,9 @@ app.use((err, req, res, next) => {
             `);
 
             if (!isConfigured()) {
-                console.log('⚠️  OpenAI API key ayarlanmamış!');
-                console.log('   .env dosyasındaki OPENAI_API_KEY değerini güncelleyin.');
-                console.log('   Key almak için: https://platform.openai.com/api-keys');
+                console.log('⚠️  Google Gemini API key ayarlanmamış!');
+                console.log('   .env dosyasındaki GEMINI_API_KEY değerini güncelleyin.');
+                console.log('   Key almak için: https://aistudio.google.com/apikey');
                 console.log('');
             }
         });

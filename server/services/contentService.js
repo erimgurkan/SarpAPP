@@ -41,9 +41,9 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
     try {
         result = await generateContent(fullPrompt);
     } catch (e) {
-        console.warn("OpenAI Hatası (Mock üretiliyor):", e.message);
+        console.warn("AI Metin Hatası (Mock üretiliyor):", e.message);
         result = {
-            content: "*(Metin üretimi pas geçildi: OpenAI API anahtarı bulunamadı)*\n\nSadece HuggingFace görseli test ediliyor...",
+            content: "*(Metin üretimi pas geçildi: AI servisinde hata oluştu)*",
             model: "mock-model",
             tokens: 0
         };

@@ -300,13 +300,62 @@
                         
                         <!-- TAB: CREATE -->
                         <div class="tab-pane active" id="tabPaneCreate">
-                            <!-- Image Grid Section (IMPORTANT) -->
-                            <div class="modal-image-grid" id="modalImageGrid">
-                                <!-- Generated cards will be loaded here dynamically -->
-                                <div class="grid-placeholder" id="gridPlaceholder">
-                                    <div class="placeholder-icon">✨</div>
-                                    <h3>Henüz görsel üretilmedi</h3>
-                                    <p>Aşağıdaki prompt alanından markanız için ilk paylaşımınızı oluşturun.</p>
+                            
+                            <!-- Workspace Main Split (Preview + Details) -->
+                            <div class="studio-workspace-main">
+                                
+                                <!-- Left: Image Preview Frame -->
+                                <div class="studio-preview-panel">
+                                    <div class="preview-canvas-card" id="studioPreviewCard">
+                                        <!-- Placeholder -->
+                                        <div class="canvas-placeholder" id="studioPlaceholder">
+                                            <div class="placeholder-icon">✨</div>
+                                            <h3>Görsel Tasarım Alanı</h3>
+                                            <p>Aşağıdaki prompt alanından giriş yapıp "OLUŞTUR" butonuna basarak ilk görselinizi tasarlayın.</p>
+                                        </div>
+                                        <img id="studioPreviewImg" src="" alt="Önizleme" style="display: none;">
+                                        
+                                        <!-- Loading Overlay -->
+                                        <div class="canvas-loading-overlay" id="studioLoadingOverlay" style="display: none;">
+                                            <div class="loading-shimmer-box"></div>
+                                            <span class="loading-pulse-text">🤖 YAPAY ZEKA ÇİZİYOR...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right: Text & Action Panel -->
+                                <div class="studio-details-panel">
+                                    <div class="details-card-brutalist">
+                                        <div class="details-section-header">
+                                            <span class="details-badge" id="studioMetaFormat">FORMAT: Kare (1:1)</span>
+                                            <span class="details-badge model" id="studioMetaModel">MODEL: -</span>
+                                        </div>
+                                        
+                                        <h4 class="details-title">Oluşturulan Paylaşım Metni</h4>
+                                        <div class="details-caption-wrapper">
+                                            <textarea class="details-caption-textarea" id="studioCaptionText" readonly placeholder="Yazay zeka tarafından hazırlanan sosyal medya başlığı ve yazısı burada görünecektir..."></textarea>
+                                        </div>
+                                        
+                                        <div class="details-actions-row">
+                                            <button class="btn-details-action" id="btnStudioCopyCaption">
+                                                <span>📋</span> Metni Kopyala
+                                            </button>
+                                            <a href="" target="_blank" download class="btn-details-action" id="btnStudioDownloadImg">
+                                                <span>💾</span> Görseli İndir
+                                            </a>
+                                            <button class="btn-details-action" id="btnStudioFavToggle">
+                                                <span>⭐</span> Favorile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mini History Strip (Horizontal Thumbnails) -->
+                            <div class="studio-history-strip-container">
+                                <h5 class="history-strip-title">Son Tasarımlarınız</h5>
+                                <div class="studio-history-strip" id="studioHistoryStrip">
+                                    <!-- Thumbnails loaded dynamically -->
                                 </div>
                             </div>
                             

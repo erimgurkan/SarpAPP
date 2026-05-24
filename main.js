@@ -316,48 +316,75 @@ async function loadHistory() {
 }
 
 function renderGrids() {
-    const imageGrid = document.getElementById('modalImageGrid');
     const fullGalleryGrid = document.getElementById('fullGalleryGrid');
-    
-    if (!imageGrid || !fullGalleryGrid) return;
+    if (!fullGalleryGrid) return;
     
     if (cachedHistory.length === 0) {
-        imageGrid.innerHTML = `
-            <div class="grid-placeholder" id="gridPlaceholder">
-                <div class="placeholder-icon">✨</div>
-                <h3>Henüz görsel üretilmedi</h3>
-                <p>Aşağıdaki prompt alanından markanız için ilk paylaşımınızı oluşturun.</p>
-            </div>
-        `;
         fullGalleryGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
                 <span style="font-size: 2rem; display: block; margin-bottom: 12px;">📁</span>
                 <p>Galeri boş. Henüz hiç görsel üretmediniz.</p>
             </div>
         `;
-        return;
+    } else {
+        let galleryGridHtml = '';
+        const activeFilter = document.querySelector('.gallery-filter-btn.active')?.dataset.filter || 'all';
+        cachedHistory.forEach(item => {
+            if (activeFilter === 'all' || item.content_type === activeFilter) {
+                galleryGridHtml += renderCard(item);
+            }
+        });
+        fullGalleryGrid.innerHTML = galleryGridHtml || `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <p>Seçilen filtreye uygun içerik bulunamadı.</p>
+            </div>
+        `;
     }
     
-    // Render Create Tab Grid
-    let createGridHtml = '';
-    cachedHistory.forEach(item => {
-        createGridHtml += renderCard(item);
-    });
-    imageGrid.innerHTML = createGridHtml;
-    
-    // Render Gallery Tab Grid
-    let galleryGridHtml = '';
-    const activeFilter = document.querySelector('.gallery-filter-btn.active')?.dataset.filter || 'all';
-    cachedHistory.forEach(item => {
-        if (activeFilter === 'all' || item.content_type === activeFilter) {
-            galleryGridHtml += renderCard(item);
+    // Render Studio Mini History Strip
+    const historyStrip = document.getElementById('studioHistoryStrip');
+    if (historyStrip) {
+        if (cachedHistory.length === 0) {
+            historyStrip.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-secondary); padding: 10px;">Henüz geçmiş tasarım yok.</span>`;
+            loadIntoStudio(null);
+        } else {
+            let stripHtml = '';
+            cachedHistory.forEach(item => {
+                const { imageUrl } = parseGeneratedContent(item.generated_content);
+                const isItemActive = currentStudioItem && currentStudioItem.id === item.id ? 'active' : '';
+                stripHtml += `
+                    <div class="mini-thumbnail ${isItemActive}" data-id="${item.id}">
+                        <img src="${imageUrl || 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=80&auto=format&fit=crop'}" alt="Thumbnail" />
+                        <span class="mini-thumbnail-tag">${item.content_type.toUpperCase()}</span>
+                    </div>
+                `;
+            });
+            historyStrip.innerHTML = stripHtml;
+            
+            // Bind click to thumbnails
+            historyStrip.querySelectorAll('.mini-thumbnail').forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    const itemId = parseInt(thumb.dataset.id);
+                    const item = cachedHistory.find(x => x.id === itemId);
+                    if (item) {
+                        loadIntoStudio(item);
+                    }
+                });
+            });
+            
+            // Auto-load latest if not set
+            if (!currentStudioItem && cachedHistory.length > 0) {
+                loadIntoStudio(cachedHistory[0]);
+            } else if (currentStudioItem) {
+                const stillExists = cachedHistory.find(x => x.id === currentStudioItem.id);
+                if (stillExists) {
+                    loadIntoStudio(stillExists);
+                } else {
+                    loadIntoStudio(cachedHistory[0]);
+                }
+            }
         }
-    });
-    fullGalleryGrid.innerHTML = galleryGridHtml || `
-        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
-            <p>Seçilen filtreye uygun içerik bulunamadı.</p>
-        </div>
-    `;
+    }
     
     attachCardListeners();
 }
@@ -422,12 +449,29 @@ async function toggleFavorite(itemId, btnElement) {
             if (selectedHistoryItem && selectedHistoryItem.id === itemId) {
                 selectedHistoryItem.is_favorite = data.is_favorite;
                 const drawerFavBtn = document.getElementById('btnFavToggle');
-                if (data.is_favorite) {
-                    drawerFavBtn.classList.add('active');
-                    drawerFavBtn.innerHTML = '<span>★</span> Favorilerde';
-                } else {
-                    drawerFavBtn.classList.remove('active');
-                    drawerFavBtn.innerHTML = '<span>☆</span> Favorile';
+                if (drawerFavBtn) {
+                    if (data.is_favorite) {
+                        drawerFavBtn.classList.add('active');
+                        drawerFavBtn.innerHTML = '<span>★</span> Favorilerde';
+                    } else {
+                        drawerFavBtn.classList.remove('active');
+                        drawerFavBtn.innerHTML = '<span>☆</span> Favorile';
+                    }
+                }
+            }
+
+            // Sync with studio preview favorite button
+            if (currentStudioItem && currentStudioItem.id === itemId) {
+                currentStudioItem.is_favorite = data.is_favorite;
+                const studioFavBtn = document.getElementById('btnStudioFavToggle');
+                if (studioFavBtn) {
+                    if (data.is_favorite) {
+                        studioFavBtn.classList.add('active');
+                        studioFavBtn.innerHTML = '<span>★</span> Favorilerde';
+                    } else {
+                        studioFavBtn.classList.remove('active');
+                        studioFavBtn.innerHTML = '<span>☆</span> Favorile';
+                    }
                 }
             }
         }
@@ -449,6 +493,9 @@ async function deleteItem(itemId) {
             renderGrids();
             if (selectedHistoryItem && selectedHistoryItem.id === itemId) {
                 closeDetailDrawer();
+            }
+            if (currentStudioItem && currentStudioItem.id === itemId) {
+                loadIntoStudio(null);
             }
         }
     } catch (err) {
@@ -588,6 +635,34 @@ function initGridModal() {
         });
     }
 
+    // Studio details card controls
+    const btnStudioCopy = document.getElementById('btnStudioCopyCaption');
+    if (btnStudioCopy) {
+        btnStudioCopy.addEventListener('click', () => {
+            const captionText = document.getElementById('studioCaptionText').value;
+            if (captionText) {
+                navigator.clipboard.writeText(captionText).then(() => {
+                    btnStudioCopy.innerHTML = '<span>✅</span> Kopyalandı!';
+                    setTimeout(() => {
+                        btnStudioCopy.innerHTML = '<span>📋</span> Metni Kopyala';
+                    }, 2000);
+                }).catch(err => {
+                    alert('Metin kopyalanamadı: ' + err);
+                });
+            }
+        });
+    }
+
+    const btnStudioFav = document.getElementById('btnStudioFavToggle');
+    if (btnStudioFav) {
+        btnStudioFav.addEventListener('click', async () => {
+            if (currentStudioItem) {
+                await toggleFavorite(currentStudioItem.id, null);
+                await loadHistory();
+            }
+        });
+    }
+
     // Generate Button click handler
     if (generateBtn) {
         generateBtn.addEventListener('click', async () => {
@@ -607,27 +682,14 @@ function initGridModal() {
             generateBtn.innerText = "ÜRETİLİYOR...";
             generateBtn.disabled = true;
             
-            // Remove grid placeholder
-            const gridPlaceholder = document.getElementById('gridPlaceholder');
-            if (gridPlaceholder) gridPlaceholder.remove();
+            // Show loading overlay inside studio preview
+            const studioLoadingOverlay = document.getElementById('studioLoadingOverlay');
+            const studioPlaceholder = document.getElementById('studioPlaceholder');
+            const studioPreviewImg = document.getElementById('studioPreviewImg');
             
-            // Prepend a loading card
-            const imageGrid = document.getElementById('modalImageGrid');
-            const loadingCardId = 'loading-card-' + Date.now();
-            const loadingCardHtml = `
-                <div class="grid-card-loading" id="${loadingCardId}">
-                    <div class="loading-shimmer-box"></div>
-                    <div class="loading-info-box">
-                        <div class="loading-bar"></div>
-                        <div class="loading-bar short"></div>
-                        <span style="font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent); margin-top: 4px; display: block; font-weight: bold; animation: pulse 1s infinite alternate;">🤖 YAPAY ZEKA ÇİZİYOR...</span>
-                    </div>
-                </div>
-            `;
-            if (imageGrid) {
-                imageGrid.insertAdjacentHTML('afterbegin', loadingCardHtml);
-                imageGrid.scrollTop = 0;
-            }
+            if (studioLoadingOverlay) studioLoadingOverlay.style.display = 'flex';
+            if (studioPlaceholder) studioPlaceholder.style.display = 'none';
+            if (studioPreviewImg) studioPreviewImg.style.display = 'none';
 
             try {
                 const res = await fetch(`${API_URL}/content/generate`, {
@@ -652,9 +714,8 @@ function initGridModal() {
 
                 const data = await res.json();
 
-                // Remove loading card
-                const loadingCard = document.getElementById(loadingCardId);
-                if (loadingCard) loadingCard.remove();
+                // Hide loading overlay
+                if (studioLoadingOverlay) studioLoadingOverlay.style.display = 'none';
 
                 if (!res.ok) {
                     throw new Error(data.error || data.message || 'Üretim hatası');
@@ -664,25 +725,23 @@ function initGridModal() {
                 cachedHistory.unshift(data.content);
                 renderGrids();
                 
-                // Open detail drawer for new item
-                openDetailDrawer(data.content);
-
+                // Load newly generated content directly into Studio Preview Frame
+                loadIntoStudio(data.content);
+                
                 // Refresh model status immediately
                 await updateModelStatus();
 
             } catch (err) {
-                const loadingCard = document.getElementById(loadingCardId);
-                if (loadingCard) loadingCard.remove();
-
-                const errorHtml = `
-                    <div style="grid-column: 1/-1; color: #D4450C; padding: 24px; border: 2px solid #D4450C; border-radius: 6px; background-color: #FDF5F2; font-family: 'Inter', sans-serif; text-align: center;">
-                        <b style="display: block; margin-bottom: 8px;">Üretim Sırasında Hata Oluştu</b>
-                        <span>${err.message}</span>
-                    </div>
-                `;
-                if (imageGrid) {
-                    imageGrid.insertAdjacentHTML('afterbegin', errorHtml);
+                if (studioLoadingOverlay) studioLoadingOverlay.style.display = 'none';
+                
+                // If it failed, restore current item or placeholder
+                if (currentStudioItem) {
+                    loadIntoStudio(currentStudioItem);
+                } else {
+                    if (studioPlaceholder) studioPlaceholder.style.display = 'flex';
                 }
+                
+                alert("Üretim Sırasında Hata Oluştu:\n" + err.message);
             } finally {
                 generateBtn.innerText = "OLUŞTUR";
                 generateBtn.disabled = false;
@@ -740,4 +799,65 @@ async function updateModelStatus() {
     } catch (err) {
         console.error("Model durum güncelleme hatası:", err);
     }
+}
+
+let currentStudioItem = null;
+
+function loadIntoStudio(item) {
+    currentStudioItem = item;
+    
+    const placeholder = document.getElementById('studioPlaceholder');
+    const img = document.getElementById('studioPreviewImg');
+    const caption = document.getElementById('studioCaptionText');
+    const format = document.getElementById('studioMetaFormat');
+    const model = document.getElementById('studioMetaModel');
+    const downloadBtn = document.getElementById('btnStudioDownloadImg');
+    const favBtn = document.getElementById('btnStudioFavToggle');
+    
+    if (!item) {
+        if (placeholder) placeholder.style.display = 'flex';
+        if (img) img.style.display = 'none';
+        if (caption) caption.value = '';
+        if (format) format.innerText = 'FORMAT: Kare (1:1)';
+        if (model) model.innerText = 'MODEL: -';
+        return;
+    }
+    
+    const { imageUrl, captionText } = parseGeneratedContent(item.generated_content);
+    
+    if (placeholder) placeholder.style.display = 'none';
+    if (img) {
+        img.src = imageUrl || 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=400&auto=format&fit=crop';
+        img.style.display = 'block';
+    }
+    if (caption) caption.value = captionText;
+    
+    // Aspect Ratio text
+    let ratioText = 'Kare (1:1)';
+    if (item.generated_content.includes('aspect-ratio: 9 / 16')) ratioText = 'Reels / Story (9:16)';
+    if (item.generated_content.includes('aspect-ratio: 16 / 9')) ratioText = 'Yatay / Banner (16:9)';
+    if (format) format.innerText = `FORMAT: ${ratioText}`;
+    
+    if (model) model.innerText = `MODEL: ${item.model_used || 'Imagen 4.0'}`;
+    
+    if (downloadBtn) downloadBtn.href = imageUrl;
+    
+    // Update Fav toggle status
+    if (favBtn) {
+        if (item.is_favorite) {
+            favBtn.classList.add('active');
+            favBtn.innerHTML = '<span>★</span> Favorilerde';
+        } else {
+            favBtn.classList.remove('active');
+            favBtn.innerHTML = '<span>☆</span> Favorile';
+        }
+    }
+    
+    // Highlight active thumbnail in strip
+    document.querySelectorAll('.mini-thumbnail').forEach(thumb => {
+        thumb.classList.remove('active');
+        if (parseInt(thumb.dataset.id) === item.id) {
+            thumb.classList.add('active');
+        }
+    });
 }
