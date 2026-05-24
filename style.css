@@ -504,15 +504,16 @@ body {
 
 .modal-content {
     background: #F4F3ED; /* Cream background matching Anthropic style */
-    border: 2px solid var(--text-black);
-    width: 95vw;
-    max-width: 1200px;
-    height: 90vh;
-    border-radius: 6px;
+    border: none;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0px;
     position: relative;
     transform: translateY(20px);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 8px 8px 0px var(--text-black);
+    box-shadow: none;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -522,29 +523,34 @@ body {
     transform: translateY(0);
 }
 
-.modal-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    background: var(--bg-main);
+/* ── Modal Back Button ───────────────────────────────────── */
+.modal-back-btn {
+    background-color: var(--bg-main);
     color: var(--text-black);
     border: 2px solid var(--text-black);
-    font-size: 1.2rem;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
+    padding: 6px 14px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+    border-radius: 4px;
     box-shadow: 2px 2px 0px var(--text-black);
     transition: transform 0.1s, box-shadow 0.1s;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.modal-close:hover {
+.modal-back-btn:hover {
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px var(--text-black);
+    background-color: #F2E8D5;
+}
+
+.modal-back-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--text-black);
 }
 
 /* ── Modal Navbar ────────────────────────────────────────── */
@@ -555,7 +561,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 60px 0 20px; /* Offset close button */
+    padding: 0 20px;
     z-index: 10;
 }
 

@@ -456,7 +456,7 @@ async function deleteItem(itemId) {
 function initGridModal() {
     const cells = document.querySelectorAll('.grid-cell');
     const modal = document.getElementById('modalOverlay');
-    const closeBtn = document.getElementById('modalClose');
+    const backBtn = document.getElementById('modalBackBtn');
     const generateBtn = document.getElementById('btnGenerate');
     const tabs = document.querySelectorAll('.modal-nav-tab');
     const filterBtns = document.querySelectorAll('.gallery-filter-btn');
@@ -498,8 +498,8 @@ function initGridModal() {
     });
 
     // Close modal
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
             modal.classList.remove('active');
             closeDetailDrawer();
         });
