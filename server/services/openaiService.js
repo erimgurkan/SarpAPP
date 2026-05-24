@@ -19,9 +19,9 @@ async function generateContent(prompt) {
     }
 
     try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiApiKey}`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${config.geminiApiKey}`;
         
-        console.log("🤖 Google Gemini API (gemini-2.5-flash) ile metin üretiliyor...");
+        console.log("🤖 Google Gemini API (gemini-3.1-flash-lite) ile metin üretiliyor...");
         
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -62,11 +62,11 @@ async function generateContent(prompt) {
             const completionTokens = data.usageMetadata?.candidatesTokenCount || 0;
             const totalTokens = data.usageMetadata?.totalTokenCount || 0;
             
-            console.log(`✅ Metin başarıyla üretildi! Model: gemini-2.5-flash`);
+            console.log(`✅ Metin başarıyla üretildi! Model: gemini-3.1-flash-lite`);
             
             return {
                 content: generatedText,
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3.1-flash-lite',
                 tokens: totalTokens,
                 promptTokens: promptTokens,
                 completionTokens: completionTokens,

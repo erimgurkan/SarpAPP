@@ -77,7 +77,7 @@ app.use((err, req, res, next) => {
 ║                                                  ║
 ║  🚀 Server:     http://localhost:${String(config.port).padEnd(5)}          ║
 ║  📊 Database:   SQLite (bağlı)                   ║
-║  🤖 AI Model:   gemini-2.5-flash & Imagen 4.0    ║
+║  🤖 AI Model:   gemini-3.1-flash-lite & Imagen 4 ║
 ║  🔑 Gemini API: ${aiStatus.padEnd(30)} ║
 ║                                                  ║
 ╠══════════════════════════════════════════════════╣
