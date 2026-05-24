@@ -640,7 +640,7 @@ function initGridModal() {
                         contentType: currentType,
                         userInput: prompt,
                         aspectRatio: ratio,
-                        model: model,
+                        ...(model && { model }),
                         resolution: resolution,
                         hd: hdQuality,
                         enhanced: enhancedPrompt,

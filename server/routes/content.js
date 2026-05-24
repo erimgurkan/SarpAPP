@@ -56,7 +56,7 @@ const generateSchema = Joi.object({
             'string.empty': 'Ne paylaşmak istediğinizi yazın.',
         }),
     aspect_ratio: Joi.string().valid('1:1', '9:16', '16:9').default('1:1'),
-    model: Joi.string().valid('imagen-4.0-generate-001', 'imagen-4.0-ultra-generate-001', 'imagen-4.0-fast-generate-001').optional(),
+    model: Joi.string().valid('imagen-4.0-generate-001', 'imagen-4.0-ultra-generate-001', 'imagen-4.0-fast-generate-001').optional().allow(null, ''),
 });
 
 router.post('/generate', checkUsageLimit, async (req, res) => {
