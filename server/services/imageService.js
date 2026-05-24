@@ -10,9 +10,11 @@ const GRADIO_API_BASE = 'https://mrfakename-z-image-turbo.hf.space/gradio_api/ca
 /**
  * Generate an image using HuggingFace Z-Image-Turbo
  * @param {string} prompt - The image prompt
+ * @param {number} width - Output image width
+ * @param {number} height - Output image height
  * @returns {Promise<string>} - URL or base64 of the generated image
  */
-async function generateImage(prompt) {
+async function generateImage(prompt, width = 1024, height = 1024) {
     if (!config.hfToken) {
         console.warn('⚠️ HF_TOKEN ayarlanmamış, resim üretilemeyecek.');
         return null; // Return null if no token is configured
@@ -29,8 +31,8 @@ async function generateImage(prompt) {
             body: JSON.stringify({
                 data: [
                     prompt,   // [0] Prompt
-                    1024,     // [1] Height
-                    1024,     // [2] Width
+                    height,   // [1] Height (Gradio expects height first)
+                    width,    // [2] Width (Gradio expects width second)
                     9,        // [3] Inference steps
                     42,       // [4] Seed (doesn't matter if randomize is true)
                     true      // [5] Randomize seed

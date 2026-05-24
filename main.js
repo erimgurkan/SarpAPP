@@ -231,6 +231,7 @@ function initGridModal() {
     generateBtn.addEventListener('click', async () => {
         const sector = document.getElementById('formSector').value || 'Genel';
         const prompt = document.getElementById('formPrompt').value;
+        const ratio = document.getElementById('formRatio').value;
         
         if (!prompt) {
             alert("Lütfen ne paylaşmak istediğinizi kısaca yazın.");
@@ -252,6 +253,7 @@ function initGridModal() {
                 body: JSON.stringify({
                     contentType: currentType,
                     userInput: prompt,
+                    aspectRatio: ratio,
                     // Pass sector temporarily until profile management UI is built
                     temporaryOverrides: {
                         industry: sector

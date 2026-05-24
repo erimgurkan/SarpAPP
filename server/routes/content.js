@@ -29,6 +29,7 @@ const generateSchema = Joi.object({
             'string.max': 'Maximum 1000 karakter girebilirsiniz.',
             'string.empty': 'Ne paylaşmak istediğinizi yazın.',
         }),
+    aspect_ratio: Joi.string().valid('1:1', '9:16', '16:9').default('1:1'),
 });
 
 router.post('/generate', checkUsageLimit, async (req, res) => {
@@ -42,6 +43,9 @@ router.post('/generate', checkUsageLimit, async (req, res) => {
         }
         if (req.body.profileId && !req.body.profile_id) {
             req.body.profile_id = req.body.profileId;
+        }
+        if (req.body.aspectRatio && !req.body.aspect_ratio) {
+            req.body.aspect_ratio = req.body.aspectRatio;
         }
 
         // If profile_id is not provided, fetch the user's first profile
@@ -69,7 +73,8 @@ router.post('/generate', checkUsageLimit, async (req, res) => {
             req.user.id,
             value.profile_id,
             value.content_type,
-            value.user_input
+            value.user_input,
+            value.aspect_ratio
         );
 
         res.status(201).json({

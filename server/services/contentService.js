@@ -23,7 +23,7 @@ const { generateImage } = require('./imageService');
  * @param {string} userInput - Kullanıcı girdisi
  * @returns {Object} Üretilen içerik verisi
  */
-async function createContent(userId, profileId, contentType, userInput) {
+async function createContent(userId, profileId, contentType, userInput, aspectRatio = '1:1') {
     // 1. Profili getir ve doğrula
     const profile = db.prepare(
         'SELECT * FROM brand_profiles WHERE id = ? AND user_id = ?'
@@ -50,13 +50,27 @@ async function createContent(userId, profileId, contentType, userInput) {
     }
 
     // 3.5 HuggingFace ile Görsel Üret (Eğer API key varsa)
-    const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. vibrant, stunning, highly detailed`;
-    const imageUrl = await generateImage(imagePrompt);
+    let width = 1024;
+    let height = 1024;
+    let formatModifier = 'square composition, centered shot';
+
+    if (aspectRatio === '9:16') {
+        width = 576;
+        height = 1024;
+        formatModifier = 'vertical orientation, vertical portrait, instagram story style, mobile wallpaper layout';
+    } else if (aspectRatio === '16:9') {
+        width = 1024;
+        height = 576;
+        formatModifier = 'horizontal orientation, wide angle view, cinematic landscape view';
+    }
+
+    const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. ${formatModifier}. vibrant, stunning, highly detailed`;
+    const imageUrl = await generateImage(imagePrompt, width, height);
     
     if (imageUrl) {
-        // Prepend the image to the content as HTML
+        // Prepend the image to the content as HTML, with max-height limit to fit beautifully in the modal
         result.content = `<div style="text-align: center; margin-bottom: 20px;">
-                            <img src="${imageUrl}" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Generated visual" />
+                            <img src="${imageUrl}" style="max-width: 100%; max-height: 380px; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Generated visual" />
                           </div>\n\n` + result.content;
     }
 
