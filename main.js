@@ -272,10 +272,10 @@ function openDetailDrawer(item) {
     const favBtn = document.getElementById('btnFavToggle');
     if (item.is_favorite) {
         favBtn.classList.add('active');
-        favBtn.innerHTML = '<span>★</span> Favorilerde';
+        favBtn.innerHTML = 'Favorilerde';
     } else {
         favBtn.classList.remove('active');
-        favBtn.innerHTML = '<span>☆</span> Favorile';
+        favBtn.innerHTML = 'Favorile';
     }
     
     document.getElementById('btnDownloadImg').href = imageUrl;
@@ -452,10 +452,10 @@ async function toggleFavorite(itemId, btnElement) {
                 if (drawerFavBtn) {
                     if (data.is_favorite) {
                         drawerFavBtn.classList.add('active');
-                        drawerFavBtn.innerHTML = '<span>★</span> Favorilerde';
+                        drawerFavBtn.innerHTML = 'Favorilerde';
                     } else {
                         drawerFavBtn.classList.remove('active');
-                        drawerFavBtn.innerHTML = '<span>☆</span> Favorile';
+                        drawerFavBtn.innerHTML = 'Favorile';
                     }
                 }
             }
@@ -467,10 +467,10 @@ async function toggleFavorite(itemId, btnElement) {
                 if (studioFavBtn) {
                     if (data.is_favorite) {
                         studioFavBtn.classList.add('active');
-                        studioFavBtn.innerHTML = '<span>★</span> Favorilerde';
+                        studioFavBtn.innerHTML = 'Favorilerde';
                     } else {
                         studioFavBtn.classList.remove('active');
-                        studioFavBtn.innerHTML = '<span>☆</span> Favorile';
+                        studioFavBtn.innerHTML = 'Favorile';
                     }
                 }
             }
@@ -606,9 +606,9 @@ function initGridModal() {
         btnCopyCaption.addEventListener('click', () => {
             const captionText = document.getElementById('drawerCaption').innerText;
             navigator.clipboard.writeText(captionText).then(() => {
-                btnCopyCaption.innerHTML = '<span>✅</span> Kopyalandı!';
+                btnCopyCaption.innerHTML = 'Kopyalandı!';
                 setTimeout(() => {
-                    btnCopyCaption.innerHTML = '<span>📋</span> Metni Kopyala';
+                    btnCopyCaption.innerHTML = 'Metni Kopyala';
                 }, 2000);
             }).catch(err => {
                 alert('Metin kopyalanamadı: ' + err);
@@ -642,9 +642,9 @@ function initGridModal() {
             const captionText = document.getElementById('studioCaptionText').value;
             if (captionText) {
                 navigator.clipboard.writeText(captionText).then(() => {
-                    btnStudioCopy.innerHTML = '<span>✅</span> Kopyalandı!';
+                    btnStudioCopy.innerHTML = 'Kopyalandı!';
                     setTimeout(() => {
-                        btnStudioCopy.innerHTML = '<span>📋</span> Metni Kopyala';
+                        btnStudioCopy.innerHTML = 'Metni Kopyala';
                     }, 2000);
                 }).catch(err => {
                     alert('Metin kopyalanamadı: ' + err);
@@ -846,10 +846,10 @@ function loadIntoStudio(item) {
     if (favBtn) {
         if (item.is_favorite) {
             favBtn.classList.add('active');
-            favBtn.innerHTML = '<span>★</span> Favorilerde';
+            favBtn.innerHTML = 'Favorilerde';
         } else {
             favBtn.classList.remove('active');
-            favBtn.innerHTML = '<span>☆</span> Favorile';
+            favBtn.innerHTML = 'Favorile';
         }
     }
     
