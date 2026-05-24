@@ -166,30 +166,46 @@
         <div class="modal-overlay" id="modalOverlay">
             <div class="modal-content">
                 <button class="modal-close" id="modalClose">×</button>
-                <h2 class="form-title" id="modalTitle">ICERIK OLUSTUR</h2>
-                
-                <div class="form-group">
-                    <label class="form-label" for="formSector">SEKTORUNUZ</label>
-                    <input type="text" class="form-control" id="formSector" placeholder="Örn: Kafe, Kuaför, Eczane...">
+                <div class="modal-content-split">
+                    <!-- LEFT COLUMN (FORM INPUTS) -->
+                    <div class="modal-form-side">
+                        <h2 class="form-title" id="modalTitle">ICERIK OLUSTUR</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="formSector">SEKTORUNUZ</label>
+                            <input type="text" class="form-control" id="formSector" placeholder="Örn: Kafe, Kuaför, Eczane...">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="formPrompt">NE PAYLASMAK ISTIYORSUN?</label>
+                            <textarea class="form-control" id="formPrompt" placeholder="Kısa bir cümle yaz..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="formRatio">GÖRSEL BOYUTU</label>
+                            <select class="form-control" id="formRatio">
+                                <option value="1:1" selected>Kare (1:1) — Instagram Gönderisi</option>
+                                <option value="9:16">Hikaye / Reels (9:16) — Dikey</option>
+                                <option value="16:9">Manzara (16:9) — Yatay</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-generate" id="btnGenerate">OLUSTUR</button>
+                    </div>
+
+                    <!-- RIGHT COLUMN (OUTPUT PREVIEW) -->
+                    <div class="modal-preview-side">
+                        <div class="preview-placeholder" id="previewPlaceholder">
+                            <div class="placeholder-dashed">
+                                <div class="placeholder-icon">✨</div>
+                                <p>Üretilen görsel ve metin taslağınız bu alanda görüntülenecektir.</p>
+                            </div>
+                        </div>
+                        <div class="preview-output" id="previewOutput" style="display: none;">
+                            <div class="output-box" id="outputBox"></div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="formPrompt">NE PAYLASMAK ISTIYORSUN?</label>
-                    <textarea class="form-control" id="formPrompt" placeholder="Kısa bir cümle yaz..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="formRatio">GÖRSEL BOYUTU</label>
-                    <select class="form-control" id="formRatio">
-                        <option value="1:1" selected>Kare (1:1) — Instagram Gönderisi</option>
-                        <option value="9:16">Hikaye / Reels (9:16) — Dikey</option>
-                        <option value="16:9">Manzara (16:9) — Yatay</option>
-                    </select>
-                </div>
-
-                <button class="btn-generate" id="btnGenerate">OLUSTUR</button>
-
-                <div class="output-box" id="outputBox"></div>
             </div>
         </div>
 

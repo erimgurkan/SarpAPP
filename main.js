@@ -208,8 +208,9 @@ function initGridModal() {
             
             // Reset form
             document.getElementById('formPrompt').value = '';
-            outputBox.style.display = 'none';
-            outputBox.innerText = '';
+            document.getElementById('previewPlaceholder').style.display = 'flex';
+            document.getElementById('previewOutput').style.display = 'none';
+            outputBox.innerHTML = '';
             
             modal.classList.add('active');
         });
@@ -241,7 +242,17 @@ function initGridModal() {
         generateBtn.innerText = "YAPAY ZEKA ÜRETİYOR...";
         generateBtn.style.opacity = "0.5";
         generateBtn.disabled = true;
-        outputBox.style.display = 'none';
+        
+        // Hide placeholder and show preview panel
+        document.getElementById('previewPlaceholder').style.display = 'none';
+        document.getElementById('previewOutput').style.display = 'block';
+        outputBox.innerHTML = `
+            <div style="text-align: center; padding: 60px 0;">
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 16px;">⌛</span>
+                <b style="font-size: 1.1rem; display: block; margin-bottom: 8px;">Yapay Zeka Hazırlıyor...</b>
+                <span style="font-size: 0.9rem; color: #555;">Görsel çiziliyor ve metin kurgulanıyor.</span>
+            </div>
+        `;
 
         try {
             const res = await fetch(`${API_URL}/content/generate`, {
@@ -269,11 +280,14 @@ function initGridModal() {
 
             // Using innerHTML so the prepended image <img> tag renders correctly
             outputBox.innerHTML = data.content.generated_content;
-            outputBox.style.display = 'block';
 
         } catch (err) {
-            outputBox.innerText = `HATA: ${err.message}`;
-            outputBox.style.display = 'block';
+            outputBox.innerHTML = `
+                <div style="color: #D4450C; padding: 24px; border: 2px solid #D4450C; border-radius: 6px; background-color: #FDF5F2; font-family: 'Inter', sans-serif;">
+                    <b style="display: block; margin-bottom: 8px;">Üretim Sırasında Hata Oluştu</b>
+                    <span>${err.message}</span>
+                </div>
+            `;
         } finally {
             generateBtn.innerText = "OLUSTUR";
             generateBtn.style.opacity = "1";

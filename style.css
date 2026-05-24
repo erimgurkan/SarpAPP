@@ -506,15 +506,14 @@ body {
     background: #F4F3ED; /* Cream background matching Anthropic style */
     border: 2px solid var(--text-black);
     width: 90%;
-    max-width: 600px;
+    max-width: 1000px; /* Wider for split-screen */
     border-radius: 12px;
-    padding: 40px;
     position: relative;
     transform: translateY(20px);
     transition: transform 0.3s ease;
     box-shadow: 0 20px 45px rgba(0,0,0,0.15);
     max-height: 90vh;
-    overflow-y: auto;
+    overflow: hidden; /* Hide overflow to let sides scroll independently */
 }
 
 .modal-overlay.active .modal-content {
@@ -523,29 +522,102 @@ body {
 
 .modal-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
+    top: 16px;
+    right: 16px;
+    background: #1A1A1A;
+    color: #FFFFFF;
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.2rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     cursor: pointer;
-    color: var(--text-black);
-    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 0.2s ease;
 }
 
 .modal-close:hover {
-    color: #555;
+    opacity: 0.8;
 }
 
-/* ── Modal Form ───────────────────────────────────────────── */
+/* ── Split Layout for Modal Content ───────────────────────── */
+.modal-content-split {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    max-height: 90vh;
+}
+
+.modal-form-side {
+    flex: 1;
+    padding: 40px;
+    border-right: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.modal-preview-side {
+    flex: 1;
+    padding: 40px;
+    background-color: #EDEAE0; /* slightly darker warm cream for separation */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    justify-content: center; /* center items vertically when empty/loading */
+}
+
+/* ── Preview Placeholder Area ────────────────────────────── */
+.preview-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 300px;
+}
+
+.placeholder-dashed {
+    border: 2px dashed #C8C0B0;
+    border-radius: 8px;
+    padding: 40px 24px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    background-color: rgba(244, 243, 237, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+.placeholder-dashed p {
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    color: #555555;
+}
+
+.preview-output {
+    width: 100%;
+}
+
+/* ── Modal Form Controls ──────────────────────────────────── */
 .form-title {
     font-family: 'Inter', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
     text-transform: uppercase;
     margin-bottom: 24px;
-    text-align: center;
     color: var(--text-black);
+    letter-spacing: -0.02em;
 }
 
 .form-group {
@@ -559,7 +631,7 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 8px;
-    color: #555;
+    color: #4A4A4A;
 }
 
 .form-control {
@@ -597,6 +669,7 @@ textarea.form-control {
     text-transform: uppercase;
     cursor: pointer;
     transition: opacity 0.2s ease;
+    margin-top: auto; /* Push to bottom of form container */
 }
 
 .btn-generate:hover {
@@ -604,16 +677,10 @@ textarea.form-control {
 }
 
 .output-box {
-    margin-top: 24px;
-    padding: 24px;
-    background: #EBE5D9;
-    border: 1px solid #C8C0B0;
-    border-radius: 8px;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     line-height: 1.6;
     color: var(--text-black);
-    display: none;
     white-space: pre-wrap;
 }
 
@@ -630,6 +697,27 @@ textarea.form-control {
     }
     .dashboard-paragraph {
         margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-content-split {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .modal-form-side {
+        border-right: none;
+        border-bottom: 2px solid var(--border-color);
+        overflow-y: visible;
+        padding: 30px 20px;
+    }
+    .modal-preview-side {
+        overflow-y: visible;
+        padding: 30px 20px;
+    }
+    .modal-close {
+        top: 10px;
+        right: 10px;
     }
 }
 
