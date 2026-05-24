@@ -362,6 +362,13 @@ body {
     background-color: var(--bg-main);
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 .header-text {
     font-family: 'Inter', sans-serif;
     font-size: 1.5rem;
@@ -2696,6 +2703,12 @@ select.form-control {
     
     .profile-new-card {
         padding: 15px;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
     
     .profile-selector-container {
