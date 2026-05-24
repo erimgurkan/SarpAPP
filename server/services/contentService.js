@@ -50,27 +50,31 @@ async function createContent(userId, profileId, contentType, userInput, aspectRa
     }
 
     // 3.5 HuggingFace ile Görsel Üret (Eğer API key varsa)
-    let width = 1024;
-    let height = 1024;
     let formatModifier = 'square composition, centered shot';
 
     if (aspectRatio === '9:16') {
-        width = 576;
-        height = 1024;
         formatModifier = 'vertical orientation, vertical portrait, instagram story style, mobile wallpaper layout';
     } else if (aspectRatio === '16:9') {
-        width = 1024;
-        height = 576;
         formatModifier = 'horizontal orientation, wide angle view, cinematic landscape view';
     }
 
     const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. ${formatModifier}. vibrant, stunning, highly detailed`;
-    const imageUrl = await generateImage(imagePrompt, width, height);
+    const imageUrl = await generateImage(imagePrompt, 1024, 1024);
     
     if (imageUrl) {
+        let imgStyle = 'max-width: 100%; max-height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        
+        if (aspectRatio === '9:16') {
+            imgStyle += ' aspect-ratio: 9 / 16; width: 250px; object-fit: cover;';
+        } else if (aspectRatio === '16:9') {
+            imgStyle += ' aspect-ratio: 16 / 9; width: 100%; object-fit: cover;';
+        } else {
+            imgStyle += ' aspect-ratio: 1 / 1; width: 350px; object-fit: cover;';
+        }
+
         // Prepend the image to the content as HTML, with max-height limit to fit beautifully in the modal
         result.content = `<div style="text-align: center; margin-bottom: 20px;">
-                            <img src="${imageUrl}" style="max-width: 100%; max-height: 380px; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Generated visual" />
+                            <img src="${imageUrl}" style="${imgStyle}" alt="Generated visual" />
                           </div>\n\n` + result.content;
     }
 
