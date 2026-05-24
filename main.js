@@ -262,10 +262,11 @@ function initGridModal() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || 'Üretim hatası');
+                throw new Error(data.error || data.message || 'Üretim hatası');
             }
 
-            outputBox.innerText = data.result;
+            // Using innerHTML so the prepended image <img> tag renders correctly
+            outputBox.innerHTML = data.content.generated_content;
             outputBox.style.display = 'block';
 
         } catch (err) {

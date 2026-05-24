@@ -12,6 +12,8 @@ module.exports = {
     jwtSecret: process.env.JWT_SECRET || 'default_secret_change_in_production',
     jwtExpiry: '30d',
 
+    hfToken: process.env.HF_TOKEN,
+
     openai: {
         apiKey: process.env.OPENAI_API_KEY,
         model: process.env.OPENAI_MODEL || 'gpt-4o-mini',

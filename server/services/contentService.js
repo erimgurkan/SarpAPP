@@ -6,12 +6,14 @@
 const { dbWrapper: db } = require('../db/database');
 const { buildFullPrompt } = require('./promptEngine');
 const { generateContent } = require('./openaiService');
+const { generateImage } = require('./imageService');
 
 /**
  * İçerik üretim pipeline'ı
  * 1. Profili getir
  * 2. Prompt'u oluştur (4 katmanlı)
  * 3. OpenAI API'ye gönder
+ * 3.5. HuggingFace Z-Image-Turbo ile görsel üret
  * 4. Sonucu veritabanına kaydet
  * 5. Kullanım sayacını artır
  *
@@ -36,6 +38,17 @@ async function createContent(userId, profileId, contentType, userInput) {
 
     // 3. OpenAI API'ye gönder
     const result = await generateContent(fullPrompt);
+
+    // 3.5 HuggingFace ile Görsel Üret (Eğer API key varsa)
+    const imagePrompt = `A high quality, professional photography for a ${profile.sector || 'business'}, capturing the concept of: ${userInput}. vibrant, stunning, highly detailed`;
+    const imageUrl = await generateImage(imagePrompt);
+    
+    if (imageUrl) {
+        // Prepend the image to the content as HTML
+        result.content = `<div style="text-align: center; margin-bottom: 20px;">
+                            <img src="${imageUrl}" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Generated visual" />
+                          </div>\n\n` + result.content;
+    }
 
     // 4. Sonucu veritabanına kaydet
     const stmt = db.prepare(`
